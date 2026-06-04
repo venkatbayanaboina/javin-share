@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>JAVIN FileShare — Host Panel</title>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#020617" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="stylesheet" href="assets/css/main.css" />
+  <script>
+    (function() {
+      const t = localStorage.getItem('theme');
+      if (t === 'light' || (!t && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+        document.documentElement.classList.add('light-theme');
+      }
+    })();
+  </script>
+</head>
+<body class="page-host">
+  <div class="wrap">
+    
+    <!-- Page status alerts -->
+    <div id="page-status" class="page-status is-hidden" role="status" aria-live="polite"></div>
+ 
+    <!-- Header Component -->
+    <div class="hdr anim1">
+      <span class="hdr-title">JAVIN FileShare</span>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <button id="theme-toggle" type="button" title="Toggle Theme">☀️</button>
+        <span class="hdr-badge" style="color: var(--indigo); background: rgba(99,102,241,.14); border: 1px solid rgba(99,102,241,.28)">⬡ Host</span>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loading" class="card anim2" style="text-align: center; padding: 40px 0;">
+      <p style="font-family: var(--font-mono); color: var(--indigo);">INITIALIZING SYSTEM...</p>
+    </div>
+
+    <!-- Block 1: Device Name Input Card -->
+    <div id="device-name-section" class="card card-accent-indigo-cyan anim2 is-hidden" style="max-width: 460px; margin: 40px auto; text-align: center;">
+      <div style="font-size: 1.6rem; width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(99,102,241,.14); border: 1px solid rgba(99,102,241,.35); box-shadow: 0 0 20px rgba(99,102,241,.28); animation: orb-pulse 2.6s ease-in-out infinite;">🖥️</div>
+      <h2 style="font-family: var(--font-sans); font-size: 1.25rem; font-weight: 700; color: #fff;">Set Your Device Name</h2>
+      <p style="font-family: var(--font-sans); font-size: 0.85rem; color: var(--sub);">This name will be visible to connecting clients</p>
+      <input type="text" id="device-name-input" placeholder="e.g. DESKTOP-MAIN" maxlength="30" required style="margin-top: 8px;" />
+      <button id="continue-btn" class="btn-primary" style="width: 100%;" type="button">Start Session →</button>
+    </div>
+
+    <!-- Main Host Dashboard -->
+    <div id="host-section" class="is-hidden">
+      
+      <!-- Block 2: Top Bar — Current Device Name -->
+      <div class="device-bar anim2">
+        <div class="device-name-lbl">🖥️ <span class="current-device-name-txt">DESKTOP-MAIN</span></div>
+        <span class="pill info">⬡ Host Session</span>
+      </div>
+
+      <!-- State 2: NEW NODE DETECTED Banner -->
+      <div id="new-node-banner" class="is-hidden" style="background: rgba(16, 185, 129, 0.08); border: 1px solid var(--emerald); border-radius: 12px; padding: 12px; font-family: var(--font-mono); font-size: 0.85rem; color: var(--emerald); display: flex; align-items: center; gap: 8px; animation: fadeup .3s ease-both;">
+        <span>🟢 NEW NODE DETECTED:</span>
+        <span id="new-node-name" style="font-weight: 600; color: #fff;"></span>
+      </div>
+
+      <!-- Grid Layout -->
+      <div class="host-terminal-grid">
+        
+        <!-- Left Column: QR & PIN Cards -->
+        <div id="qr-block" class="anim3" style="display: flex; flex-direction: column; gap: 16px;">
+          
+          <!-- Block 3: QR Code Card -->
+          <div class="card card-accent-indigo-cyan qr-card">
+            <div class="qr-scan-lbl">SCAN TO JOIN</div>
+            <div class="qr-block">
+              <img id="qr-code" alt="QR Code" style="width: 160px; height: 160px; display: block;" />
+            </div>
+            <div style="font-size: 0.82rem; color: var(--sub);">Or enter URL manually below</div>
+            
+            <!-- Block 4: Connection URLs -->
+            <div style="display: flex; flex-direction: column; gap: 8px; width: 100%; margin-top: 8px;">
+              
+              <!-- IP Address URL row -->
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <div style="font-family: var(--font-mono); font-size: 0.62rem; color: var(--cyan); letter-spacing: 0.1em; min-width: 28px; text-align: center; background: rgba(6,182,212,.10); border: 1px solid rgba(6,182,212,.22); border-radius: 5px; padding: 2px 5px; flex-shrink: 0;">IP</div>
+                <div style="flex: 1; font-family: var(--font-mono); font-size: 0.76rem; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06); border-radius: 10px; padding: 10px 14px; color: var(--cyan); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                  <span id="connection-url">http://...</span>
+                </div>
+                <button id="copy-url-btn" type="button" title="Copy IP URL" style="width: 34px; height: 34px; flex-shrink: 0; border-radius: 8px; background: rgba(6,182,212,.12); border: 1px solid rgba(6,182,212,.25); color: var(--cyan); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .2s; outline: none;">📋</button>
+              </div>
+
+              <!-- .local mDNS URL row (hidden until server provides it) -->
+              <div id="local-url-row" style="display: none; gap: 8px; align-items: center;">
+                <div style="font-family: var(--font-mono); font-size: 0.62rem; color: #a78bfa; letter-spacing: 0.1em; min-width: 28px; text-align: center; background: rgba(139,92,246,.10); border: 1px solid rgba(139,92,246,.22); border-radius: 5px; padding: 2px 5px; flex-shrink: 0;">.local</div>
+                <div style="flex: 1; font-family: var(--font-mono); font-size: 0.76rem; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06); border-radius: 10px; padding: 10px 14px; color: #a78bfa; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                  <span id="connection-local-url">—</span>
+                </div>
+                <button id="copy-local-url-btn" type="button" title="Copy .local URL" style="width: 34px; height: 34px; flex-shrink: 0; border-radius: 8px; background: rgba(139,92,246,.12); border: 1px solid rgba(139,92,246,.25); color: #a78bfa; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .2s; outline: none;">📋</button>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Block 5: Session PIN Card -->
+          <div class="card card-accent-amber pin-card" style="display: flex; flex-direction: column; justify-content: space-between; gap: 14px;">
+            <div>
+              <div style="font-family: var(--font-mono); font-size: 0.60rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--amber);">SESSION PIN</div>
+              <div class="pin-val" id="session-pin">000 · 000</div>
+            </div>
+            
+            <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+              <div style="font-family: var(--font-mono); font-size: 0.60rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--sub);">Expires in</div>
+              <div id="pin-timer" style="font-family: var(--font-mono); font-size: 1.8rem; color: var(--amber); font-weight: 600;">--:--</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Connected Devices & Overrides (State 2) -->
+        <div id="status-panel" class="card card-accent-emerald-cyan anim4 is-hidden" style="display: flex; flex-direction: column; justify-content: space-between; gap: 16px;">
+          <div>
+            <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--sub); letter-spacing: 0.12em; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 6px; margin-bottom: 12px;">CONNECTED NODES</div>
+            <!-- Connection status updates -->
+            <div id="connection-status" class="connection-status status-waiting" style="display: none;"></div>
+            
+            <ul id="connected-nodes-list" style="list-style: none; font-family: var(--font-mono); font-size: 0.85rem; color: #fff;">
+              <li style="color: var(--muted);">NO NODES CONNECTED</li>
+            </ul>
+          </div>
+
+          <!-- Block 7: Grace Period Controls (System Override) -->
+          <div id="grace-controls" class="is-hidden" style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 16px; margin-top: 16px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+            <div style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--amber); letter-spacing: 0.14em; text-transform: uppercase;">SYSTEM OVERRIDE</div>
+            <div class="override-timer" id="grace-countdown" style="font-family: var(--font-mono); font-size: 2.8rem; font-weight: 700; color: var(--amber); line-height: 1;">00:30</div>
+            <div style="font-size: 0.76rem; color: var(--sub); margin-bottom: 10px;">A client has connected. Session will start automatically.</div>
+            <div class="override-actions" style="display: flex; gap: 10px; width: 100%;">
+              <button id="go-now-btn" class="btn-primary" style="flex: 1;" type="button">Go Now →</button>
+              <button id="extend-btn" class="btn-secondary" style="flex: 1;" type="button">⏱ Extend</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- State 3: Session Locked Indicator -->
+        <div id="lock-panel" class="card card-accent-rose anim4 is-hidden" style="display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 14px; text-align: center; min-height: 250px;">
+          <div style="font-family: var(--font-mono); font-size: 1.3rem; font-weight: 700; color: var(--rose); letter-spacing: 0.18em; text-transform: uppercase;">SESSION LOCKED</div>
+          <div style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--sub); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 10px;">INITIALIZING NETWORK CONDUIT</div>
+          
+          <div class="terminal-loader-segmented" style="display: flex; gap: 6px;">
+            <div class="segment active" style="width: 14px; height: 14px; background: var(--rose); border-radius: 2px;"></div>
+            <div class="segment active" style="width: 14px; height: 14px; background: var(--rose); border-radius: 2px;"></div>
+            <div class="segment animate-flicker" style="width: 14px; height: 14px; background: rgba(244,63,94,0.2); border-radius: 2px; animation: flicker 1s infinite alternate;"></div>
+            <div class="segment" style="width: 14px; height: 14px; background: rgba(255, 255, 255, 0.05); border-radius: 2px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hidden elements required to prevent JS lookup errors -->
+      <div id="response-timer" style="display: none;">
+        <span id="countdown"></span><span id="response-count"></span><span id="total-receivers"></span>
+      </div>
+
+      <!-- Footer Panel -->
+      <footer class="anim5" style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-top: 10px;">
+        <div style="font-family: var(--font-mono); font-size: 1rem; font-weight: 600;">
+          <span style="color: var(--muted);">HOST:</span> <span class="current-device-name-txt" style="color: #fff; font-weight: 700;">Node</span>
+        </div>
+        <div class="footer-actions">
+          <button id="reset-device-name-btn" class="btn-secondary" type="button">Change Name</button>
+          <button id="shutdown-btn" class="btn-exit" type="button">End Session</button>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="module" src="assets/js/core/index.js"></script>
+  <script type="module" src="assets/js/pages/host.js"></script>
+</body>
+</html>

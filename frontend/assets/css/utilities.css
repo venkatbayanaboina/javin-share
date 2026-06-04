@@ -1,0 +1,45 @@
+/* Visibility — use with JS classList or initial HTML state */
+.is-hidden {
+  display: none;
+}
+
+.is-block {
+  display: block !important;
+}
+
+.is-flex {
+  display: flex !important;
+}
+
+/* Spacing */
+.u-mt-sm { margin-top: var(--space-sm); }
+.u-mt-md { margin-top: var(--space-md); }
+.u-mt-lg { margin-top: var(--space-lg); }
+.u-mb-sm { margin-bottom: var(--space-sm); }
+.u-mb-md { margin-bottom: var(--space-md); }
+.u-mb-lg { margin-bottom: var(--space-lg); }
+.u-ml-sm { margin-left: var(--space-sm); }
+
+/* Flex */
+.u-flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.u-flex-col-gap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+/* Typography */
+.u-text-muted { color: var(--color-text-muted); font-size: var(--font-size-sm); }
+.u-text-accent { color: var(--color-brand-accent); }
+.u-text-center { text-align: center; }
+.u-text-subtle { color: var(--color-text-subtle); }
+.u-opacity-muted { opacity: 0.8; font-size: 0.95em; }
+
+/* Layout */
+.u-min-h-banner { min-height: 10vh; }
+.u-w-full { width: 100%; }

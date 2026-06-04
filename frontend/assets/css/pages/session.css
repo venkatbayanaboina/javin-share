@@ -1,0 +1,207 @@
+/* ============================================================
+   JAVIN FileShare — Session Dashboard Stylesheet
+   Theme: Deep Space Dark · Glassmorphism
+   Scope: .page-session (prevents style leaks to other pages)
+   ============================================================ */
+
+/* Info grid layout */
+.page-session .info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+.page-session .info-cell {
+  background: rgba(255,255,255,.04);
+  border: var(--border-glass);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+}
+.page-session .info-lbl {
+  font-family: var(--font-mono);
+  font-size: .58rem; font-weight: 600;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 5px;
+}
+.page-session .info-val {
+  font-family: var(--font-mono);
+  font-size: .90rem; font-weight: 600; color: #fff;
+}
+
+/* Topology Tree */
+.page-session #topology-map {
+  font-family: var(--font-mono);
+  font-size: 0.85rem; color: #fff;
+  line-height: 1.5; background: rgba(0, 0, 0, 0.3);
+  padding: 18px; border-radius: var(--radius-sm);
+  border: var(--border-glass); overflow-x: auto;
+  margin: 0;
+}
+
+/* Pulse dot row for connected nodes */
+.page-session .devices-row {
+  background: rgba(16,185,129,.08);
+  border: 1px solid rgba(16,185,129,.18);
+  border-radius: var(--radius-sm); padding: 12px 18px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.page-session .pulse-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: pulse-dot 1.6s ease-in-out infinite;
+}
+
+/* Warnings and Alerts */
+.page-session .lock-banner,
+.page-session .nav-block-banner {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 4px 0 !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 8px !important;
+  position: relative !important;
+  overflow: visible !important;
+  box-shadow: none !important;
+}
+.page-session .lock-banner::before,
+.page-session .nav-block-banner::before {
+  display: none !important;
+}
+.page-session .lock-banner .bullet {
+  color: #fbbf24;
+  font-size: 1.1rem;
+  line-height: 1.2;
+  user-select: none;
+}
+.page-session .nav-block-banner .bullet {
+  color: #fda4af;
+  font-size: 1.1rem;
+  line-height: 1.2;
+  user-select: none;
+}
+.page-session .lock-text {
+  font-size: .85rem;
+  color: #fbbf24;
+  font-weight: 600;
+  margin-right: 4px;
+}
+.page-session .nav-block-text {
+  font-size: .85rem;
+  color: #fda4af;
+  font-weight: 600;
+  margin-right: 4px;
+}
+.page-session .lock-sub,
+.page-session .nav-block-sub {
+  font-size: .80rem;
+  color: var(--sub);
+  display: inline;
+}
+
+/* Console logs area visual styles */
+.page-session #console-body {
+  font-size: 0.78rem;
+  line-height: 1.5;
+  background: transparent;
+  max-height: 140px;
+  overflow-y: auto;
+}
+.page-session .console-header {
+  background: rgba(255, 255, 255, 0.01) !important;
+}
+
+/* Layout spacing & Symmetrical Buttons */
+.page-session .action-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 14px !important;
+  margin-bottom: 16px !important;
+  width: 100% !important;
+}
+
+.page-session .action-grid button {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  margin: 0 !important;
+  height: 50px !important;
+  box-sizing: border-box !important;
+  font-family: var(--font-sans) !important;
+  font-size: .85rem !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  border-radius: var(--radius-sm, 8px) !important;
+  transition: all var(--transition-base, 0.2s) !important;
+}
+
+/* Glassmorphic Styles and overrides for Action Buttons */
+.page-session .action-grid #sendBtn {
+  background: linear-gradient(135deg, #06b6d4 0%, #6366f1 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.32) !important;
+}
+.page-session .action-grid #sendBtn:hover:not(:disabled) {
+  transform: translateY(-1px) !important;
+  filter: brightness(1.08) !important;
+  box-shadow: 0 6px 24px rgba(99, 102, 241, 0.45) !important;
+}
+.page-session .action-grid #sendBtn:disabled {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #475569 !important;
+  box-shadow: none !important;
+  transform: none !important;
+  cursor: not-allowed !important;
+}
+
+.page-session .action-grid #receiveBtnDecorative {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid rgba(255, 255, 255, 0.04) !important;
+  color: var(--muted, #64748b) !important;
+  cursor: not-allowed !important;
+}
+
+.page-session .action-grid #historyBtn {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #94a3b8 !important;
+}
+.page-session .action-grid #historyBtn:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.20) !important;
+  color: #ffffff !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.05) !important;
+}
+.page-session .action-grid #historyBtn:active {
+  transform: translateY(0) !important;
+}
+
+.page-session .action-grid #exitBtn {
+  background: rgba(244, 63, 94, 0.12) !important;
+  border: 1px solid rgba(244, 63, 94, 0.28) !important;
+  color: #fda4af !important;
+  box-shadow: 0 0 16px rgba(244, 63, 94, 0.07) !important;
+}
+.page-session .action-grid #exitBtn:hover {
+  background: rgba(244, 63, 94, 0.20) !important;
+  border-color: rgba(244, 63, 94, 0.50) !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 24px rgba(244, 63, 94, 0.25) !important;
+  transform: translateY(-1px) !important;
+}
+.page-session .action-grid #exitBtn:active {
+  transform: translateY(0) !important;
+}
+
+.page-session #response-timer:not(.is-hidden) {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

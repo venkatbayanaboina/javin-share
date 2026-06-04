@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>JAVIN FileShare — Session Terminated</title>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#020617" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="stylesheet" href="assets/css/main.css" />
+  <link rel="stylesheet" href="assets/css/pages/disconnected.css" />
+</head>
+<body class="page-disconnected">
+  
+  <div class="center-box">
+    
+    <!-- Warning Icon Orb -->
+    <div class="warning-orb">⚠️</div>
+    
+    <!-- Title and Sub -->
+    <h1>Session Ended</h1>
+    <p>You have been disconnected from the session.</p>
+    
+    <div class="divider"></div>
+
+    <!-- Session Summary Metrics -->
+    <table class="metrics-table">
+      <tbody>
+        <tr>
+          <td class="lbl">NODES_ENGAGED:</td>
+          <td class="val" id="stat-nodes">4</td>
+        </tr>
+        <tr>
+          <td class="lbl">FILES_STREAMED:</td>
+          <td class="val" id="stat-files">32</td>
+        </tr>
+        <tr>
+          <td class="lbl">TOTAL_DATA:</td>
+          <td class="val" id="stat-data">1.2 GB</td>
+        </tr>
+        <tr>
+          <td class="lbl">UPTIME_DURATION:</td>
+          <td class="val" id="stat-duration">15 MIN</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Operational Actions -->
+    <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+      <button type="button" id="init-btn" class="btn-primary" style="width: 100%;">
+        [ INITIALIZE NEW SESSION ]
+      </button>
+      <button type="button" id="home-btn" class="btn-secondary" style="width: 100%;">
+        [ RETURN HOME ]
+      </button>
+    </div>
+
+  </div>
+
+  <script type="module" src="assets/js/pages/session-ended.js"></script>
+</body>
+</html>

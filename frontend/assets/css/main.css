@@ -1,0 +1,17 @@
+/**
+ * JAVIN FileShare — main stylesheet
+ * Import order: tokens → utilities → base → legacy bundle → page overrides → modal
+ */
+@import url('./tokens.css');
+@import url('./utilities.css');
+@import url('./base.css');
+@import url('./legacy.css');
+@import url('./components/modal.css');
+@import url('./components/toast.css');
+@import url('./components/page-status.css');
+@import url('./pages/host.css');
+@import url('./pages/session.css');
+@import url('./pages/pin.css');
+@import url('./pages/send.css');
+@import url('./pages/receive.css');
+@import url('./pages/disconnected.css');

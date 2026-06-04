@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>JAVIN FileShare — Receive Streams</title>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#020617" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="stylesheet" href="assets/css/main.css" />
+  <link rel="stylesheet" href="assets/css/pages/receive.css" />
+  <script>
+    (function() {
+      const t = localStorage.getItem('theme');
+      if (t === 'light' || (!t && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+        document.documentElement.classList.add('light-theme');
+      }
+    })();
+  </script>
+  <style>
+    /* Map progress action buttons to standard page design patterns */
+    .page-receive .offer-actions {
+      display: flex !important;
+      gap: 12px !important;
+      width: 100% !important;
+      flex-wrap: nowrap !important;
+    }
+    .page-receive #cancel-download:not(.is-hidden) {
+      flex: 1 1 0 !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: none !important;
+      height: 50px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 8px !important;
+      font-family: var(--font-sans) !important;
+      font-size: 0.90rem !important;
+      font-weight: 700 !important;
+      cursor: pointer !important;
+      border: var(--border-coral) !important;
+      outline: none !important;
+      border-radius: var(--radius-md) !important;
+      padding: 14px !important;
+      background: var(--color-coral-dim) !important;
+      color: #fda4af !important;
+      backdrop-filter: var(--blur-sm) !important;
+      -webkit-backdrop-filter: var(--blur-sm) !important;
+      box-shadow: 0 0 16px rgba(244, 63, 94, 0.07) !important;
+      position: relative !important;
+      overflow: hidden !important;
+      transition: all var(--transition-base) !important;
+      -webkit-user-select: none !important;
+      user-select: none !important;
+      box-sizing: border-box !important;
+    }
+    .page-receive #cancel-download:hover:not(.is-hidden) {
+      background: rgba(244, 63, 94, 0.20) !important;
+      border-color: rgba(244, 63, 94, 0.50) !important;
+      color: #ffffff !important;
+      box-shadow: 0 0 24px rgba(244, 63, 94, 0.25), 0 4px 16px rgba(244, 63, 94, 0.16) !important;
+      transform: translateY(-1px) !important;
+    }
+    .page-receive #cancel-download:active:not(.is-hidden) {
+      transform: translateY(0) !important;
+      box-shadow: 0 0 10px rgba(244, 63, 94, 0.12) !important;
+    }
+    .page-receive #open-folder-btn:not(.is-hidden) {
+      flex: 1 1 0 !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: none !important;
+      height: 50px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 8px !important;
+      font-family: var(--font-sans) !important;
+      font-size: 0.90rem !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.02em !important;
+      cursor: pointer !important;
+      border: none !important;
+      outline: none !important;
+      border-radius: var(--radius-md) !important;
+      padding: 14px !important;
+      background: linear-gradient(135deg, #10b981 0%, #059669 60%, #047857 100%) !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.32), 0 1px 0 rgba(255,255,255,0.18) inset, 0 -1px 0 rgba(0,0,0,0.20) inset !important;
+      position: relative !important;
+      overflow: hidden !important;
+      transition: all var(--transition-base) !important;
+      text-decoration: none !important;
+      -webkit-user-select: none !important;
+      user-select: none !important;
+      box-sizing: border-box !important;
+    }
+    .page-receive #open-folder-btn:hover:not(.is-hidden) {
+      transform: translateY(-2px) scale(1.015) !important;
+      box-shadow: 0 8px 32px rgba(16, 185, 129, 0.45), 0 1px 0 rgba(255,255,255,0.22) inset !important;
+      filter: brightness(1.08) !important;
+    }
+    .page-receive #open-folder-btn:active:not(.is-hidden) {
+      transform: translateY(0) scale(0.985) !important;
+      box-shadow: 0 2px 12px rgba(16, 185, 129, 0.28) !important;
+    }
+  </style>
+</head>
+<body class="page-receive">
+  <div class="container-transfer">
+    
+    <!-- Page status alerts -->
+    <div id="page-status" class="page-status is-hidden" role="status" aria-live="polite"></div>
+
+    <!-- Header -->
+    <header class="page-header">
+      <h1 class="app-title">JAVIN FileShare</h1>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <button id="theme-toggle" type="button" title="Toggle Theme">☀️</button>
+        <span class="page-role-badge">[ RECEIVER ]</span>
+      </div>
+    </header>
+
+    <!-- State 1: Scanning / Listening Lobby -->
+    <div id="status-message">
+      <div class="status-icon">🛰️</div>
+      <h2 class="status-title">Listening for Incoming Streams</h2>
+      <p class="status-sub">Conduit ready. Waiting for sender file offers.</p>
+      <div class="radar-sweep"></div>
+    </div>
+
+    <!-- Sender Progress speed metadata -->
+    <div id="sender-progress" class="glass-card is-hidden" style="text-align: center; font-family: var(--font-mono); font-size: 0.82rem; color: var(--color-cyan);">
+      SENDER UPLOADING: 0% · SPEED: 0 B/s · ETA: --:--
+    </div>
+
+    <!-- Response timer countdown banner -->
+    <div id="response-timer" class="is-hidden">
+      <div class="timer-label">Time to Respond</div>
+      <div class="timer-track">
+        <div class="timer-bar" id="timer-bar" style="width: 100%;"></div>
+      </div>
+      <div id="timer-count">30</div>
+    </div>
+
+    <!-- State 2: Glass Card Package Drawer (incoming files offer) -->
+    <div id="incoming-files" class="glass-card is-hidden">
+      <div class="card-label">Incoming Stream</div>
+      <div class="offer-header">
+        <div>
+          <h3 class="offer-title" id="offer-sender-title">Sender is offering files</h3>
+          <span class="offer-meta">Pending response...</span>
+        </div>
+        <div class="offer-count" id="offer-count">0 FILES</div>
+      </div>
+      
+      <ul class="offer-files" id="offer-files-list">
+        <!-- Populated dynamically by JS -->
+      </ul>
+      
+      <div class="offer-total" id="offer-total-size">
+        Total size: <strong id="offer-total-size-val">0 B</strong>
+      </div>
+      
+      <div class="offer-actions">
+        <button type="button" id="accept-btn">Accept Stream</button>
+        <button type="button" id="reject-btn">Reject</button>
+      </div>
+    </div>
+
+    <!-- State 3 & 4: Download Progress and Completion Panel -->
+    <div id="download-progress" class="is-hidden">
+      <div class="progress-section-title" id="download-title">
+        Downloading Stream <span id="download-title-pct">0%</span>
+      </div>
+      
+      <div id="download-list">
+        <!-- Contains progress-file-item with tracks and fills -->
+      </div>
+      
+      <!-- Statistics Block -->
+      <div id="download-stats">
+        <!-- Filled dynamically as stat-item blocks -->
+      </div>
+      
+      <div class="offer-actions" style="margin-top: 24px;">
+        <button type="button" id="cancel-download" class="is-hidden">[ CANCEL DOWNLOAD ]</button>
+        <button type="button" id="open-folder-btn" class="is-hidden">[ RETURN TO DASHBOARD ]</button>
+      </div>
+    </div>
+
+    <!-- Receive History Table -->
+    <div id="recv-history">
+      <div class="history-header">
+        <span class="history-title">Session Reception Log</span>
+        <span class="history-count" id="history-count">0</span>
+      </div>
+      <div class="table-wrap">
+        <table id="history-table" style="display: none;">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Size</th>
+              <th>Time</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="history-body">
+            <!-- Populated dynamically by JS -->
+          </tbody>
+        </table>
+        <div class="history-empty" id="history-empty">No files received in this session yet.</div>
+      </div>
+    </div>
+
+    <!-- Collapsible Real-Time Activity Log Console -->
+    <div class="glass-card" style="padding: 0;">
+      <div class="console-header" id="toggle-console-btn" style="padding: 14px 20px; border-bottom: var(--border-glass); display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; background: rgba(255,255,255,0.01);">
+        <span style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--color-text-muted); font-weight: 600; letter-spacing: 0.12em;">CONSOLE LOGS</span>
+        <span id="toggle-console-text" style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--color-text-secondary);">[ SHOW ]</span>
+      </div>
+      <div id="console-body" style="display: none; padding: 16px 20px; max-height: 140px; overflow-y: auto; font-family: var(--font-mono); font-size: 0.78rem; line-height: 1.5; color: var(--color-indigo);">
+        <div><span style="color: var(--color-text-muted);">[SYSTEM]</span> RECEIVER CONSOLE INITIATED</div>
+      </div>
+    </div>
+
+    <!-- Exit Session Panel -->
+    <div style="display: flex; justify-content: center; margin-top: 10px;">
+      <button type="button" id="exit-receive-btn">
+        [ EXIT SESSION ]
+      </button>
+    </div>
+  </div>
+  
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="module" src="assets/js/core/index.js"></script>
+  <script type="module" src="assets/js/pages/receive-files.js"></script>
+</body>
+</html>

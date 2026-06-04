@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>FileShare - Audit Logs</title>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#020617" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="stylesheet" href="assets/css/main.css" />
+  <script>
+    (function() {
+      const t = localStorage.getItem('theme');
+      if (t === 'light' || (!t && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+        document.documentElement.classList.add('light-theme');
+      }
+    })();
+  </script>
+</head>
+<body class="page-history-audit">
+  <div class="container" style="max-width: 800px; margin: 40px auto;">
+    <header class="page-header" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: var(--border-thin); padding-bottom: 12px;">
+      <div>
+        <h1 class="brand-name" style="font-size: 1.5rem; color: var(--color-text-on-dark);">AUDIT LOGS</h1>
+        <p class="brand-tagline" style="font-size: 0.85rem; color: var(--color-text-muted);">JAVIN network transmission history</p>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <button id="theme-toggle" type="button" title="Toggle Theme">☀️</button>
+        <button id="back-btn" class="btn btn-secondary" style="border-radius: var(--radius-sm); font-family: var(--font-family-mono); font-size: 0.8rem;" type="button">
+          [ RETURN_TO_CONSOLE ]
+        </button>
+      </div>
+    </header>
+
+    <div class="history-card" style="background: var(--color-surface-panel); border: var(--border-thin); border-radius: var(--radius-md); padding: 24px;">
+      <div style="font-family: var(--font-family-mono); font-size: 0.75rem; color: var(--color-text-muted); letter-spacing: 1px; margin-bottom: 16px; border-bottom: var(--border-thin); padding-bottom: 8px; display: flex; justify-content: space-between;">
+        <span>TRANSMISSION RECORD</span>
+        <span id="record-count">0 ENTRIES</span>
+      </div>
+
+      <!-- Audit Log Console Table -->
+      <div class="terminal-table-container" style="overflow-x: auto; width: 100%;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-family: var(--font-family-mono); font-size: 0.85rem; color: var(--color-text-primary);">
+          <thead>
+            <tr style="border-bottom: var(--border-thin); color: var(--color-text-muted);">
+              <th style="padding: 10px 8px; font-weight: 500;">TIMESTAMP</th>
+              <th style="padding: 10px 8px; font-weight: 500;">DIRECTION</th>
+              <th style="padding: 10px 8px; font-weight: 500;">FILE NAME</th>
+              <th style="padding: 10px 8px; font-weight: 500; text-align: right;">SIZE</th>
+              <th style="padding: 10px 8px; font-weight: 500; text-align: right;">STATUS</th>
+            </tr>
+          </thead>
+          <tbody id="audit-logs-body">
+            <!-- Dynamically populated rows -->
+            <tr>
+              <td colspan="5" style="text-align: center; padding: 40px 0; color: var(--color-text-muted); font-style: italic;">
+                NO TRANSMISSION RECORDS FOUND
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="module" src="assets/js/core/index.js"></script>
+  <script type="module" src="assets/js/pages/history.js"></script>
+</body>
+</html>
