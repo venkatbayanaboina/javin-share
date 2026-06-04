@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=JAVIN FileShare
+Comment=Cross-platform secure file sharing application
+Exec=./Javin FileShare (for macOS & Linux).sh
+Icon=./icon.png
+Terminal=false
+Categories=Network;FileTransfer;

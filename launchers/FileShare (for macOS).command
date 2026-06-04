@@ -1,5 +1,5 @@
 #!/bin/bash
-# FileShare.command - Double-clickable macOS launcher
+# FileShare (for macOS).command - Double-clickable macOS launcher
 
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -7,11 +7,11 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # Change to the script directory
 cd "$SCRIPT_DIR"
 
-# Make the start.sh executable
-chmod +x start.sh
+# Make the unified launcher executable
+chmod +x "Javin FileShare (for macOS & Linux).sh"
 
-# Run the start script
-./start.sh
+# Run the unified launcher
+./"Javin FileShare (for macOS & Linux).sh"
 
 # Keep the window open
 echo

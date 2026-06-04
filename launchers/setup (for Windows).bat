@@ -2,8 +2,14 @@
 setlocal ENABLEDELAYEDEXPANSION
 
 set SCRIPT_DIR=%~dp0
-set BACKEND_DIR=%SCRIPT_DIR%backend
+set BACKEND_DIR=%SCRIPT_DIR%..\backend
 set PORT=4000
+
+:: Extract CUSTOM_HOST from .env using PowerShell
+set CUSTOM_HOST=
+for /f "usebackq tokens=*" %%i in (`powershell -Command "if (Test-Path '..\.env') { $match = Select-String -Path '..\.env' -Pattern '^CUSTOM_HOST='; if ($match) { $match.Line.Split('=')[1].Trim(\"'`\" \") } }" 2^>nul`) do (
+    set CUSTOM_HOST=%%i
+)
 
 :: Get the device's IP address
 for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr /c:"IPv4 Address"') do (
@@ -14,7 +20,10 @@ for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr /c:"IPv4 Address"') do (
 if "%DEVICE_IP%"=="" set DEVICE_IP=localhost
 if "%DEVICE_IP%"=="127.0.0.1" set DEVICE_IP=localhost
 
-set URL=https://%DEVICE_IP%:%PORT%
+set DISPLAY_HOST=%DEVICE_IP%
+if not "%CUSTOM_HOST%"=="" set DISPLAY_HOST=%CUSTOM_HOST%
+
+set URL=https://%DISPLAY_HOST%:%PORT%
 
 echo ========================================
 echo    JAVIN FileShare - Complete Setup
@@ -34,7 +43,7 @@ if %errorlevel% NEQ 0 (
   echo => - Installing SSL certificates
   echo => - Trusting certificates in Windows
   echo.
-  echo => TO FIX: Right-click setup.bat and select 'Run as administrator'
+  echo => TO FIX: Right-click setup (for Windows).bat and select 'Run as administrator'
   echo.
   echo => Press any key to exit...
   pause >nul
@@ -115,6 +124,15 @@ if not exist "%BACKEND_DIR%\certs\cert.pem" (
   echo IP.1 = 127.0.0.1 >> "%BACKEND_DIR%\certs\cert.conf"
   echo IP.2 = %DEVICE_IP% >> "%BACKEND_DIR%\certs\cert.conf"
   
+  if not "!CUSTOM_HOST!"=="" (
+      echo !CUSTOM_HOST! | findstr /r "^[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$" >nul
+      if !errorlevel! equ 0 (
+          echo IP.3 = !CUSTOM_HOST! >> "%BACKEND_DIR%\certs\cert.conf"
+      ) else (
+          echo DNS.3 = !CUSTOM_HOST! >> "%BACKEND_DIR%\certs\cert.conf"
+      )
+  )
+  
   echo => Running OpenSSL command...
   %OPENSSL% req -x509 -newkey rsa:2048 -nodes -keyout "%BACKEND_DIR%\certs\key.pem" -out "%BACKEND_DIR%\certs\cert.pem" -days 365 -config "%BACKEND_DIR%\certs\cert.conf" -extensions v3_req
   if %errorlevel% neq 0 (
@@ -141,6 +159,24 @@ if exist "%BACKEND_DIR%\certs\cert.pem" (
     echo => The app will still work but browser may show security warning
   ) else (
     echo => ✓ Certificate installed successfully!
+  )
+
+  echo => Setting up application icon...
+  :: Download a beautiful sharing icon (.ico) to launchers folder using PowerShell
+  powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; (New-Object System.Net.WebClient).DownloadFile('https://img.icons8.com/color/48/share.ico', '%SCRIPT_DIR%icon.ico')" 2>nul
+  if exist "%SCRIPT_DIR%icon.ico" (
+    echo => ✓ Application icon downloaded successfully!
+  ) else (
+    echo => ⚠️ Warning: Could not download application icon. Fallback icon will be used.
+  )
+
+  echo => Creating desktop shortcut...
+  :: Create Windows desktop shortcut using PowerShell
+  powershell -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut(\"$Home\Desktop\JAVIN FileShare.lnk\"); $Shortcut.TargetPath = \"%SCRIPT_DIR%start (for Windows).vbs\"; $Shortcut.WorkingDirectory = \"%SCRIPT_DIR%\"; if (Test-Path \"%SCRIPT_DIR%icon.ico\") { $Shortcut.IconLocation = \"%SCRIPT_DIR%icon.ico\" }; $Shortcut.Save()" 2>nul
+  if %errorlevel% neq 0 (
+    echo => ⚠️ Warning: Could not create desktop shortcut.
+  ) else (
+    echo => ✓ Desktop shortcut created successfully on your Desktop!
   )
 ) else (
   echo => ERROR: Certificate file not found!
@@ -170,8 +206,8 @@ echo => Press Ctrl+C to stop the server.
 echo.
 
 :: Start the server (this keeps the window open)
-cd "%BACKEND_DIR%"
-if not exist server.js (
+cd "%SCRIPT_DIR%.."
+if not exist backend\server.js (
     echo => ERROR: server.js not found in backend directory!
     echo => Please make sure you're running this from the correct location.
     pause
@@ -183,8 +219,7 @@ echo => Press any key to start the server...
 pause >nul
 
 echo => Starting FileShare server...
-node server.js
+node backend/server.js
 
 popd
 endlocal
-
