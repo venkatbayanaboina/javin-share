@@ -1,0 +1,25 @@
+{
+  "name": "javin-fileshare",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Local-network file sharing with PIN/QR session workflow",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "node --watch backend/server.js",
+    "test": "npm test --prefix backend",
+    "test:unit": "npm run test:unit --prefix backend",
+    "test:integration": "npm run test:integration --prefix backend",
+    "lint": "npm run lint --prefix backend",
+    "format": "npm run format --prefix backend",
+    "format:check": "npm run format:check --prefix backend",
+    "postinstall": "npm install --prefix backend"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/venkatbayanaboina/Javin-Share-.git"
+  }
+}

@@ -1,0 +1,6 @@
+node_modules
+backend/uploads
+backend/uploads-test
+backend/certs
+package-lock.json
+backend/package-lock.json

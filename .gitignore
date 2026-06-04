@@ -1,8 +1,36 @@
+# Dependencies
 node_modules/
+
+# Build output
 dist/
+
+# Runtime / generated
+backend/uploads/
+backend/uploads-test/
+backend/certs/
+backend/device_names.json
+*.log
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Archives / installers
 *.dmg
 *.zip
 *.app
 
+# TLS keys (never commit)
+*.pem
+*.key
 
-# Do not commit local TLS certs
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
