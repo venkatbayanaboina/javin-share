@@ -162,7 +162,7 @@ header h1 {
     width: 100%;
 }
 
-/* Modern device name input styling */
+/* Legacy overrides for device name input and pin input commented out to support variables-based theme.
 #device-name-input  {
     width: 100%;
     max-width: 350px;
@@ -190,9 +190,7 @@ header h1 {
     font-style: italic;
 }
 
-/* Enhanced PIN input styling */
 #pin-input { 
-    
     width: 100%;
     max-width: 350px;
     padding: 18px 20px;
@@ -214,6 +212,7 @@ header h1 {
     box-shadow: 0 6px 20px rgba(102, 126, 234, 0.15);
     transform: translateY(-2px);
 }
+*/
 
 .pin-timer { 
     color: #667eea; 
@@ -297,6 +296,7 @@ h3 {
         font-size: 1rem;
     }
     
+    /* Legacy overrides commented out to support variables-based theme.
     #device-name-input,
     #pin-input {
         max-width: 100%;
@@ -314,6 +314,7 @@ h3 {
         padding: 18px 28px;
         font-size: 1.2rem;
     }
+    */
     
     /* Grace controls responsive styling */
     #grace-controls {
@@ -425,6 +426,7 @@ h3 {
     font-weight: 500; 
 }
 
+/* Legacy overrides commented out to support variables-based theme.
 .btn { 
     padding: 18px 28px; 
     border: none; 
@@ -455,6 +457,7 @@ h3 {
     box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
     background: linear-gradient(153deg, #edd83a, #f47003);
 }
+*/
 
 .btn-send, .btn-receive, .btn-exit { 
     width: 62%; 
