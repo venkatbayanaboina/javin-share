@@ -163,7 +163,7 @@ body::after {
 /* ── Layout ── */
 .wrap {
   position: relative; z-index: 2;
-  max-width: 860px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 28px 18px 40px;
   display: flex; flex-direction: column; gap: 16px;
