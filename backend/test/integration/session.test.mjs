@@ -69,4 +69,43 @@ describe('session API', () => {
     assert.equal(res.status, 301);
     assert.match(res.headers.location, /session\.html/);
   });
+
+  describe('Host / Loopback Access Restrictions', () => {
+    it('allows loopback host to fetch/create session', async () => {
+      const res = await request(app).get('/get-current-session');
+      assert.equal(res.status, 200);
+      assert.ok(res.body.sessionId);
+    });
+
+    it('denies external client from creating session (returns 404)', async () => {
+      const res = await request(app)
+        .get('/get-current-session')
+        .set('x-forwarded-for', '192.168.1.100');
+      assert.equal(res.status, 404);
+      assert.equal(res.body.error, 'No active session found');
+    });
+
+    it('allows external client to get active session details', async () => {
+      const { sessionId } = await createSession(io, true);
+
+      const res = await request(app)
+        .get('/get-current-session')
+        .set('x-forwarded-for', '192.168.1.100');
+      assert.equal(res.status, 200);
+      assert.equal(res.body.sessionId, sessionId);
+    });
+
+    it('allows loopback host to access host.html', async () => {
+      const res = await request(app).get('/host.html');
+      assert.equal(res.status, 200);
+    });
+
+    it('redirects external client from host.html to join-pin.html', async () => {
+      const res = await request(app)
+        .get('/host.html')
+        .set('x-forwarded-for', '192.168.1.100');
+      assert.equal(res.status, 302);
+      assert.match(res.headers.location, /join-pin\.html/);
+    });
+  });
 });
