@@ -4,6 +4,7 @@ import { config } from '../config.js';
 import { PAGE_FILES } from '../config/pages.js';
 import { store } from '../state/store.js';
 import { accessDeniedPage, sessionExpiredPage, sessionNotFoundPage } from '../views/error-pages.js';
+import { isLocalRequest } from '../utils/request.js';
 
 /** Legacy filenames → canonical (Phase 3/4 rename) */
 const LEGACY_REDIRECTS = {
@@ -21,8 +22,6 @@ export function createPagesRouter() {
   router.get('/pin', (_req, res) => {
     res.redirect(`/${PAGE_FILES.pin}`);
   });
-
-  router.use(express.static(config.frontendPath));
 
   Object.entries(LEGACY_REDIRECTS).forEach(([legacy, canonical]) => {
     router.get(`/${legacy}`, (req, res) => {
@@ -49,11 +48,17 @@ export function createPagesRouter() {
     res.sendFile(path.join(config.frontendPath, PAGE_FILES.ended));
   });
 
+  // Serve static assets (JS, CSS, images, PWA manifests) after custom page routes
+  router.use(express.static(config.frontendPath));
+
   return router;
 }
 
 function hostProtectedPage(filename) {
   return (req, res) => {
+    if (!isLocalRequest(req)) {
+      return res.redirect(`/${PAGE_FILES.pin}`);
+    }
     const sessionId = req.query.session;
     if (sessionId && store.currentHostSessionId && sessionId !== store.currentHostSessionId) {
       return res.status(403).send(accessDeniedPage());
