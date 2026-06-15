@@ -12,7 +12,7 @@ import {
   getPinRateLimitStatus,
   recordPinFailure,
 } from '../services/pin-rate-limit.service.js';
-import { getClientIp } from '../utils/request.js';
+import { getClientIp, isLocalRequest } from '../utils/request.js';
 import { isSafeId } from '../utils/ids.js';
 import { gracefulShutdown } from '../shutdown.js';
 
@@ -155,6 +155,12 @@ export function createSessionRouter(deps) {
     }
 
     // No active session exists or it has expired - create a new one
+    // Only allow local request to create a new session. If it is non-local (external client device), return 404.
+    if (!isLocalRequest(req)) {
+      res.status(404).json({ error: 'No active session found' });
+      return;
+    }
+
     try {
       const newSessionData = await createSession(deps.io, forceNew);
       res.json(newSessionData);
