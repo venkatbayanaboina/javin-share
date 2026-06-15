@@ -1,9 +1,15 @@
 import { markSessionExited } from '../core/storage.js';
 
+let role = 'client';
+
 try {
   const params = new URLSearchParams(window.location.search);
   const sid = params.get('session');
   if (sid) markSessionExited(sid);
+
+  if (params.get('role')) {
+    role = params.get('role');
+  }
 
   // Set metrics from URL if present
   const nodes = params.get('nodes');
@@ -18,10 +24,21 @@ try {
 
 } catch (_) {}
 
-document.getElementById('init-btn')?.addEventListener('click', () => {
-  window.location.href = '/?forceNew=1';
-});
+const initBtn = document.getElementById('init-btn');
+if (initBtn) {
+  if (role !== 'host') {
+    initBtn.style.display = 'none';
+  } else {
+    initBtn.addEventListener('click', () => {
+      window.location.href = '/?forceNew=1';
+    });
+  }
+}
 
 document.getElementById('home-btn')?.addEventListener('click', () => {
-  window.location.href = '/';
+  if (role !== 'host') {
+    window.location.href = '/join-pin.html';
+  } else {
+    window.location.href = '/';
+  }
 });
