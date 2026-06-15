@@ -50,6 +50,31 @@ flowchart TD
 ### 3. Relay Buffered Strategy (`relay-buffered`)
 * **Behavior**: A highly optimized hybrid strategy. 
 * **Optimization**: Files smaller than the `spoolThresholdBytes` are kept entirely in-memory for lightning-fast RAM-to-RAM pipelining. If a file exceeds this threshold, the strategy automatically spools and spills remaining chunks to disk on-the-fly, keeping server memory usage constant.
+* **Memory Safety & Sequential Integrity (Updated)**:
+  * **Lagging Queue Pattern**: Catching-up and late-connecting downloaders read spooled disk chunks first. New live chunks are queued in memory and flushed in order after catch-up is complete, preventing out-of-order chunk interleaving (file corruption).
+  * **Backpressured Pipe**: Spooled disk reads use a backpressured stream pipe to pause reading if a receiver is slow.
+  * **16MB Safety Hard-cap**: Automatically drops extremely stalled downloaders whose queued buffers exceed 16MB to prevent RAM exhaustion.
+
+Here is the detailed flow diagram for the updated `relay-buffered` strategy:
+
+```mermaid
+graph TD
+    A[Sender Uploads Chunks] --> B{Spooling Threshold Exceeded?}
+    B -- No --> C[Buffer in Memory]
+    B -- Yes --> D[Spool to Disk File]
+    
+    D --> E[writeChunkToBranches]
+    C --> E
+    
+    E --> F[Active Branches Map]
+    E --> G[Catching-up Receivers Map]
+    
+    H[Receiver Connects] --> I{Is Spooled?}
+    I -- No --> J[Read Memory Buffer & Join Active Branches]
+    I -- Yes --> K[Pipe Disk Spool up to current byte offset]
+    K --> L[Buffer new live chunks in catching-up queue]
+    L --> M[Disk read finishes -> Flush queue -> Join Active Branches]
+```
 
 ---
 
