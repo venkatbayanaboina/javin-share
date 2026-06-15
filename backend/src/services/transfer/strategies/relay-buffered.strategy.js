@@ -134,16 +134,22 @@ export class RelayBufferedStrategy extends BaseStreamStrategy {
       streamSession.fileMetadata = finalMetadata;
       streamSession.uploadCompleted = true;
 
+      const finalize = () => {
+        if (!res.headersSent) {
+          res.json({ success: true, fileId, bytesReceived });
+        }
+        this.activeSessions.delete(fileId);
+      };
+
       if (streamSession.writeStream) {
         streamSession.writeStream.end(() => {
           this.endAllBranches(streamSession);
+          finalize();
         });
       } else {
         this.endAllBranches(streamSession);
+        finalize();
       }
-
-      res.json({ success: true, fileId, bytesReceived });
-      this.activeSessions.delete(fileId);
     });
 
     req.on('error', (err) => {

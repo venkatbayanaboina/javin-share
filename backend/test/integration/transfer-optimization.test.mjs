@@ -358,6 +358,7 @@ describe('Transfer Optimization Integration Tests', () => {
       for (let i = 0; i < 50; i++) {
         const streamSession = streamStrategy.activeSessions.get(bufferedFileId);
         if (streamSession?.connectedReceivers.has('peer1')) {
+          streamSession.downloads.set('dummy', {}); // Keep activeFiles from being deleted by download completion
           break;
         }
         await new Promise((r) => setTimeout(r, 20));
@@ -404,6 +405,7 @@ describe('Transfer Optimization Integration Tests', () => {
           fs.unlinkSync(finalMeta.path);
         }
       } finally {
+        session.activeFiles.delete(bufferedFileId);
         await new Promise((resolve) => server.close(resolve));
       }
     });
