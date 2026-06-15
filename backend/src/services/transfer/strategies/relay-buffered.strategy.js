@@ -16,6 +16,7 @@ class BufferedRelaySession extends BaseStreamSession {
     this.writeStream = null;
     this.memoryBuffer = []; // array of Buffer chunks
     this.totalBytes = 0;
+    this.catchingUpReceivers = new Map(); // receiverPeerId -> { branch, queue, spooledBytesAtStart }
   }
 }
 
@@ -39,6 +40,46 @@ export class RelayBufferedStrategy extends BaseStreamStrategy {
     }, config.transfer.streamRelayTimeoutMs || 30000);
 
     return streamSession;
+  }
+
+  writeChunkToBranches(streamSession, chunk, uploadFileStream, enableBackpressure = false) {
+    const maxBufferSize = config.transfer.maxReceiverBufferSize || 16 * 1024 * 1024;
+
+    for (const [peerId, branch] of streamSession.branches.entries()) {
+      if (branch.destroyed || branch.writableEnded) {
+        streamSession.branches.delete(peerId);
+        continue;
+      }
+
+      if (branch.writableLength > maxBufferSize) {
+        logger.warn(`⚠️ Receiver ${peerId} is stalled (buffer size ${branch.writableLength} bytes > limit). Dropping branch.`);
+        branch.destroy(new Error('Receiver stalled / buffer overflowed'));
+        streamSession.branches.delete(peerId);
+        continue;
+      }
+
+      branch.write(chunk);
+    }
+
+    if (streamSession.catchingUpReceivers) {
+      for (const [peerId, catchingUp] of streamSession.catchingUpReceivers.entries()) {
+        const branch = catchingUp.branch;
+        if (branch.destroyed || branch.writableEnded) {
+          streamSession.catchingUpReceivers.delete(peerId);
+          continue;
+        }
+
+        const totalQueueBytes = catchingUp.queue.reduce((acc, c) => acc + c.length, 0);
+        if (branch.writableLength + totalQueueBytes > maxBufferSize) {
+          logger.warn(`⚠️ Catching-up receiver ${peerId} is stalled (buffer size + queue ${branch.writableLength + totalQueueBytes} bytes > limit). Dropping branch.`);
+          branch.destroy(new Error('Receiver stalled / buffer overflowed'));
+          streamSession.catchingUpReceivers.delete(peerId);
+          continue;
+        }
+
+        catchingUp.queue.push(chunk);
+      }
+    }
   }
 
   async handleUpload(req, res, session, fileId) {
@@ -161,6 +202,18 @@ export class RelayBufferedStrategy extends BaseStreamStrategy {
     req.pipe(busboy);
   }
 
+  destroyAllBranches(streamSession) {
+    super.destroyAllBranches(streamSession);
+    if (streamSession.catchingUpReceivers) {
+      for (const catchingUp of streamSession.catchingUpReceivers.values()) {
+        try {
+          catchingUp.branch.destroy();
+        } catch (_) {}
+      }
+      streamSession.catchingUpReceivers.clear();
+    }
+  }
+
   async handleDownload(req, res, session, fileId, receiverPeerId) {
     const streamSession = this.activeSessions.get(fileId);
     if (!streamSession) {
@@ -181,7 +234,6 @@ export class RelayBufferedStrategy extends BaseStreamStrategy {
     streamSession.downloads.set(receiverPeerId, res);
 
     const branch = new PassThrough({ highWaterMark: chunkHighWaterMark() });
-    streamSession.branches.set(receiverPeerId, branch);
 
     res.status(200);
     res.setHeader('Content-Type', streamSession.fileMetadata.type || 'application/octet-stream');
@@ -194,20 +246,45 @@ export class RelayBufferedStrategy extends BaseStreamStrategy {
 
     branch.pipe(res);
 
-    // If spooled, feed existing spooled file chunks to this branch first
+    let fileStream = null;
+
+    // If spooled, feed existing spooled file chunks to this branch first (asynchronously via backpressured pipe)
     if (streamSession.spooled && streamSession.tempPath && fs.existsSync(streamSession.tempPath)) {
-      const fileStream = fs.createReadStream(streamSession.tempPath);
-      fileStream.on('data', (chunk) => {
-        branch.write(chunk);
+      const spooledBytesAtStart = streamSession.totalBytes;
+      streamSession.catchingUpReceivers.set(receiverPeerId, { branch, queue: [], spooledBytesAtStart });
+
+      fileStream = fs.createReadStream(streamSession.tempPath, { end: Math.max(0, spooledBytesAtStart - 1) });
+      fileStream.pipe(branch, { end: false });
+
+      fileStream.on('end', () => {
+        const catchingUp = streamSession.catchingUpReceivers.get(receiverPeerId);
+        if (catchingUp) {
+          logger.info(`🔄 Lagging receiver ${receiverPeerId} caught up on spooled disk bytes. Flushing live queue.`);
+          for (const chunk of catchingUp.queue) {
+            if (!branch.destroyed && !branch.writableEnded) {
+              branch.write(chunk);
+            }
+          }
+          // Promote to active branch mapping
+          streamSession.branches.set(receiverPeerId, branch);
+          streamSession.catchingUpReceivers.delete(receiverPeerId);
+
+          if (streamSession.uploadCompleted && !branch.writableEnded && !branch.destroyed) {
+            branch.end();
+          }
+        }
       });
+
       fileStream.on('error', (err) => {
-        logger.error('Error reading spooled chunks for lagging receiver:', err);
+        logger.error(`Error reading spooled chunks for lagging receiver ${receiverPeerId}:`, err);
+        branch.destroy(err);
       });
     } else {
       // Feed memory buffer chunks directly to this branch
       for (const chunk of streamSession.memoryBuffer) {
         branch.write(chunk);
       }
+      streamSession.branches.set(receiverPeerId, branch);
     }
 
     let cleanedUp = false;
@@ -215,11 +292,24 @@ export class RelayBufferedStrategy extends BaseStreamStrategy {
       if (cleanedUp) return;
       cleanedUp = true;
       streamSession.downloads.delete(receiverPeerId);
+
+      if (fileStream) {
+        try { fileStream.destroy(); } catch (_) {}
+      }
+
       const b = streamSession.branches.get(receiverPeerId);
       if (b && !b.destroyed) {
         try { b.destroy(); } catch (_) {}
       }
       streamSession.branches.delete(receiverPeerId);
+
+      if (streamSession.catchingUpReceivers) {
+        const catchingUp = streamSession.catchingUpReceivers.get(receiverPeerId);
+        if (catchingUp && catchingUp.branch && !catchingUp.branch.destroyed) {
+          try { catchingUp.branch.destroy(); } catch (_) {}
+        }
+        streamSession.catchingUpReceivers.delete(receiverPeerId);
+      }
 
       try {
         const meta = session.activeFiles.get(fileId) || streamSession.fileMetadata;

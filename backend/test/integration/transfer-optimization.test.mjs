@@ -498,6 +498,229 @@ describe('Transfer Optimization Integration Tests', () => {
         await new Promise((resolve) => server.close(resolve));
       }
     });
+
+    it('late-connecting lagging receiver receives the entire file in correct order', async () => {
+      config.transfer.defaultStrategy = 'relay-buffered';
+      config.transfer.enableStreamRelay = true;
+      config.transfer.spoolThresholdBytes = 500; // Spill to disk quickly
+      config.transfer.streamRelayTimeoutMs = 50;  // Trigger upload quickly after timeout
+
+      const bufferedFileId = 'buffered-late-file';
+      const coordinator = getTransferCoordinator();
+      const session = store.sessions.get(sessionId);
+
+      session.peers.set('peer1', {
+        peerId: 'peer1',
+        socketId: 'peer1-socket',
+        role: 'receiver',
+        currentPage: 'receive',
+        isDisconnected: false,
+      });
+      session.peers.set('peer2', {
+        peerId: 'peer2',
+        socketId: 'peer2-socket',
+        role: 'receiver',
+        currentPage: 'receive',
+        isDisconnected: false,
+      });
+
+      const streamSession = coordinator.initializeStreamSession(
+        bufferedFileId,
+        {
+          id: bufferedFileId,
+          name: 'late.bin',
+          size: 4000,
+          type: 'application/octet-stream',
+        },
+        ['peer1', 'peer2'],
+        'sender-socket',
+        session,
+      );
+
+      const server = app.listen(0);
+      const port = server.address().port;
+      const streamStrategy = coordinator.strategies.get('relay-buffered');
+
+      // 1. Connect first receiver peer1
+      const downloadPromise1 = fetch(
+        `http://127.0.0.1:${port}/download/${sessionId}/${bufferedFileId}?receiver=peer1`
+      );
+
+      // Wait for peer1 to connect and the upload timeout to fire (which starts the upload)
+      for (let i = 0; i < 50; i++) {
+        const s = streamStrategy.activeSessions.get(bufferedFileId);
+        if (s?.uploadStarted) {
+          s.downloads.set('dummy', {}); // Keep activeFiles from deletion
+          break;
+        }
+        await new Promise((r) => setTimeout(r, 20));
+      }
+
+      // 2. Start upload via raw http.request
+      const http = await import('node:http');
+      const boundary = '----javin-buffered-late';
+      const header = Buffer.from(
+        `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="late.bin"\r\nContent-Type: application/octet-stream\r\n\r\n`
+      );
+      const footer = Buffer.from(`\r\n--${boundary}--\r\n`);
+
+      const req = http.request({
+        hostname: '127.0.0.1',
+        port: port,
+        path: `/upload/${sessionId}?fileId=${bufferedFileId}`,
+        method: 'POST',
+        headers: {
+          'X-File-Id': bufferedFileId,
+          'Content-Type': `multipart/form-data; boundary=${boundary}`,
+          'Transfer-Encoding': 'chunked'
+        }
+      });
+
+      req.write(header);
+      const partA = Buffer.alloc(2000, 'a');
+      req.write(partA);
+
+      // Wait for it to spool to disk
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      // 3. Connect late receiver peer2
+      const downloadPromise2 = fetch(
+        `http://127.0.0.1:${port}/download/${sessionId}/${bufferedFileId}?receiver=peer2`
+      );
+
+      // Wait for peer2 connection
+      for (let i = 0; i < 50; i++) {
+        const s = streamStrategy.activeSessions.get(bufferedFileId);
+        if (s?.connectedReceivers.has('peer2')) {
+          break;
+        }
+        await new Promise((r) => setTimeout(r, 20));
+      }
+
+      // 4. Write second part of upload
+      const partB = Buffer.alloc(2000, 'b');
+      req.write(partB);
+      req.write(footer);
+      req.end();
+
+      const uploadResPromise = new Promise((resolve, reject) => {
+        req.on('response', (res) => {
+          if (res.statusCode === 200) resolve();
+          else reject(new Error(`Upload status ${res.statusCode}`));
+        });
+        req.on('error', reject);
+      });
+
+      try {
+        await uploadResPromise;
+
+        // Verify both receivers download the correct, uncorrupted file
+        const downloadRes1 = await downloadPromise1;
+        assert.equal(downloadRes1.status, 200);
+        const downloadBuf1 = Buffer.from(await downloadRes1.arrayBuffer());
+        assert.equal(downloadBuf1.length, 4000);
+        assert.equal(downloadBuf1.subarray(0, 2000).toString(), partA.toString());
+        assert.equal(downloadBuf1.subarray(2000, 4000).toString(), partB.toString());
+
+        const downloadRes2 = await downloadPromise2;
+        assert.equal(downloadRes2.status, 200);
+        const downloadBuf2 = Buffer.from(await downloadRes2.arrayBuffer());
+        assert.equal(downloadBuf2.length, 4000);
+        assert.equal(downloadBuf2.subarray(0, 2000).toString(), partA.toString());
+        assert.equal(downloadBuf2.subarray(2000, 4000).toString(), partB.toString());
+      } finally {
+        session.activeFiles.delete(bufferedFileId);
+        await new Promise((resolve) => server.close(resolve));
+      }
+    });
+
+    it('stalled receiver exceeding memory limit is dropped', async () => {
+      config.transfer.defaultStrategy = 'relay-buffered';
+      config.transfer.enableStreamRelay = true;
+      config.transfer.spoolThresholdBytes = 100;
+      config.transfer.maxReceiverBufferSize = 500; // Small limit for testing
+
+      const bufferedFileId = 'buffered-stall-file';
+      const coordinator = getTransferCoordinator();
+      const session = store.sessions.get(sessionId);
+
+      session.peers.set('peer1', {
+        peerId: 'peer1',
+        socketId: 'peer1-socket',
+        role: 'receiver',
+        currentPage: 'receive',
+        isDisconnected: false,
+      });
+
+      const streamSession = coordinator.initializeStreamSession(
+        bufferedFileId,
+        {
+          id: bufferedFileId,
+          name: 'stall.bin',
+          size: 10000,
+          type: 'application/octet-stream',
+        },
+        ['peer1'],
+        'sender-socket',
+        session,
+      );
+
+      const server = app.listen(0);
+      const port = server.address().port;
+      const streamStrategy = coordinator.strategies.get('relay-buffered');
+
+      const downloadPromise = fetch(
+        `http://127.0.0.1:${port}/download/${sessionId}/${bufferedFileId}?receiver=peer1`
+      );
+
+      // Wait for receiver to connect
+      for (let i = 0; i < 50; i++) {
+        const s = streamStrategy.activeSessions.get(bufferedFileId);
+        if (s?.connectedReceivers.has('peer1')) {
+          s.downloads.set('dummy', {});
+          break;
+        }
+        await new Promise((r) => setTimeout(r, 20));
+      }
+
+      // Send upload that exceeds the 500 bytes buffer cap, but receiver is not reading the fetch stream
+      const boundary = '----javin-buffered-stall';
+      const body = Buffer.concat([
+        Buffer.from(
+          `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="stall.bin"\r\nContent-Type: application/octet-stream\r\n\r\n`,
+        ),
+        Buffer.alloc(2000, 'x'), // Exceeds the 500 bytes safety limit
+        Buffer.from(`\r\n--${boundary}--\r\n`),
+      ]);
+
+      await fetch(
+        `http://127.0.0.1:${port}/upload/${sessionId}?fileId=${bufferedFileId}`,
+        {
+          method: 'POST',
+          headers: {
+            'X-File-Id': bufferedFileId,
+            'Content-Type': `multipart/form-data; boundary=${boundary}`,
+            'Content-Length': String(body.length),
+          },
+          body,
+        },
+      );
+
+      try {
+        const downloadRes = await downloadPromise;
+        // The download connection should have been aborted or closed prematurely by server branch destruction
+        let errorCaught = false;
+        try {
+          await downloadRes.arrayBuffer();
+        } catch (_) {
+          errorCaught = true;
+        }
+        assert.ok(errorCaught || downloadRes.status !== 200, 'Download stream should have failed/aborted due to stall destruction');
+      } finally {
+        session.activeFiles.delete(bufferedFileId);
+        await new Promise((resolve) => server.close(resolve));
+      }
+    });
   });
 });
 
