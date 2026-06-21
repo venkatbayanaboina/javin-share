@@ -49,6 +49,8 @@ export const config = {
     streamRelayTimeoutMs: Number(process.env.TRANSFER_STREAM_RELAY_TIMEOUT_MS) || 30000,
     chunkSizeBytes: Number(process.env.TRANSFER_CHUNK_SIZE_BYTES) || 8 * 1024 * 1024,
     spoolThresholdBytes: Number(process.env.TRANSFER_SPOOL_THRESHOLD_BYTES) || 256 * 1024 * 1024,
+    maxReceiverBufferSize: Number(process.env.TRANSFER_MAX_RECEIVER_BUFFER_SIZE) || 16 * 1024 * 1024,
+    enableBufferedBackpressure: process.env.TRANSFER_ENABLE_BUFFERED_BACKPRESSURE === 'true',
   },
   pinMaxAttempts: Number(process.env.PIN_MAX_ATTEMPTS) || 8,
   pinRateWindowMs: Number(process.env.PIN_RATE_WINDOW_MS) || 15 * 60 * 1000,

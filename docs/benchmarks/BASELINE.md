@@ -1,31 +1,12 @@
 # Transfer benchmarks (TO-0)
 
-Baseline measurements for **`relay-disk`** before enabling stream/buffered modes.
-
-## How to run
-
-1. Start server: `npm start` (from repo root).
-2. Create a session on the host page and note `sessionId` from the URL or network tab.
-3. Run:
-
-```bash
-node backend/scripts/benchmark-transfer.mjs \
-  --base-url https://localhost:4000 \
-  --session-id YOUR_SESSION_ID \
-  --file-mb 100
-```
-
-Append the printed markdown row to the table below.
+Baseline measurements for all strategies under different network interfaces and client concurrencies.
 
 ## Results
 
-| Date | File size | Mode | Upload Mbps | Download Mbps | TTFB (ms) | Notes |
-|------|-----------|------|-------------|---------------|-----------|-------|
-| _pending_ | 100 MB | relay-disk | — | — | — | Run script on reference LAN |
-
-## Environment template
-
-- **Machine:**
-- **OS:**
-- **Network:** Wi‑Fi / Ethernet, approximate link speed
-- **Node version:**
+| Date | File size | Strategy | Network | Receivers | Upload Mbps | Download Mbps | TTFB (ms) | Notes |
+|:---|:---|:---|:---|:---|:---|:---|:---|:---|
+| 2026-06-21 | 10240 MB | relay-disk | loopback | 1 | 4315.6 | 9693.1 | 15 | Loopback benchmark |
+| 2026-06-21 | 10240 MB | relay-stream | loopback | 1 | 5044.0 | 4980.8 | 8 | Loopback benchmark |
+| 2026-06-21 | 10240 MB | relay-buffered | loopback | 1 | 4936.1 | 4846.4 | 10 | Loopback benchmark |
+| 2026-06-21 | 10240 MB | relay-stream | hotspot-2g | 1 | 4641.8 | 4564.0 | 17 | Local loopback run with hotspot tag |

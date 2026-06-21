@@ -45,6 +45,7 @@ export class RelayBufferedStrategy extends BaseStreamStrategy {
   writeChunkToBranches(streamSession, chunk, uploadFileStream, enableBackpressure = false) {
     const maxBufferSize = config.transfer.maxReceiverBufferSize || 16 * 1024 * 1024;
 
+    let paused = false;
     for (const [peerId, branch] of streamSession.branches.entries()) {
       if (branch.destroyed || branch.writableEnded) {
         streamSession.branches.delete(peerId);
@@ -58,7 +59,10 @@ export class RelayBufferedStrategy extends BaseStreamStrategy {
         continue;
       }
 
-      branch.write(chunk);
+      const ok = branch.write(chunk);
+      if (!ok && enableBackpressure) {
+        paused = true;
+      }
     }
 
     if (streamSession.catchingUpReceivers) {
@@ -78,6 +82,27 @@ export class RelayBufferedStrategy extends BaseStreamStrategy {
         }
 
         catchingUp.queue.push(chunk);
+      }
+    }
+
+    if (paused && uploadFileStream && !streamSession.uploadSourcePaused) {
+      streamSession.uploadSourcePaused = true;
+      uploadFileStream.pause();
+      const onDrain = () => {
+        let allReady = true;
+        for (const branch of streamSession.branches.values()) {
+          if (!branch.destroyed && branch.writableNeedDrain) {
+            allReady = false;
+            break;
+          }
+        }
+        if (allReady) {
+          streamSession.uploadSourcePaused = false;
+          uploadFileStream.resume();
+        }
+      };
+      for (const branch of streamSession.branches.values()) {
+        branch.once('drain', onDrain);
       }
     }
   }
@@ -132,7 +157,8 @@ export class RelayBufferedStrategy extends BaseStreamStrategy {
           streamSession.memoryBuffer.push(chunk);
         }
 
-        this.writeChunkToBranches(streamSession, chunk, file, false);
+        const enableBackpressure = config.transfer.enableBufferedBackpressure === true;
+        this.writeChunkToBranches(streamSession, chunk, file, enableBackpressure);
       });
 
       file.on('end', () => {

@@ -15,6 +15,7 @@ import {
 import { getClientIp, isLocalRequest } from '../utils/request.js';
 import { isSafeId } from '../utils/ids.js';
 import { gracefulShutdown } from '../shutdown.js';
+import { getTransferCoordinator } from '../services/transfer/coordinator.service.js';
 
 function pinRateLimitedResponse(res, status) {
   const retryAfterSec = Math.ceil(status.retryAfterMs / 1000);
@@ -168,6 +169,31 @@ export function createSessionRouter(deps) {
       logger.error('Error creating session:', err);
       res.status(500).json({ error: 'Could not create session.' });
     }
+  });
+
+  router.get('/api/benchmark/register-session/:sessionId/:fileId', (req, res) => {
+    const { sessionId, fileId } = req.params;
+    const session = store.sessions.get(sessionId);
+    if (!session) return res.status(404).json({ error: 'Session not found' });
+
+    const expectedReceivers = new Set();
+    const receiversCount = Number(req.query.receivers || 1);
+
+    for (let i = 1; i <= receiversCount; i++) {
+      const peerId = `receiver-bench-peer-${i}`;
+      expectedReceivers.add(peerId);
+      session.peers.set(peerId, {
+        peerId,
+        socketId: `mock-socket-id-${i}`,
+        role: 'client'
+      });
+    }
+
+    const fileMetadata = { name: 'benchmark.bin', size: Number(req.query.size || 0) };
+    const coordinator = getTransferCoordinator();
+    coordinator.initializeStreamSession(fileId, fileMetadata, expectedReceivers, 'mock-sender-socket-id', session);
+
+    res.json({ success: true });
   });
 
   router.get('/api/session-details/:sessionId', (req, res) => {
