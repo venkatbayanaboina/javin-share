@@ -24,6 +24,7 @@ let currentFileId = null;
 let isRequesting = false;
 let receiversCount = 0;
 let consoleBody = null;
+let knownPeers = new Map();
 
 document.addEventListener('DOMContentLoaded', async () => {
   if (!window.FileShareUtils) {
@@ -185,11 +186,13 @@ function setPageState(state) {
     if (stagedSection) stagedSection.classList.add('is-hidden');
     if (responseTimer) responseTimer.style.display = 'none';
     if (uploadSection) uploadSection.style.display = 'none';
+    clearReceiverProgress();
   } else if (state === 2) {
     if (dropZone) dropZone.style.display = 'block';
     if (stagedSection) stagedSection.classList.remove('is-hidden');
     if (responseTimer) responseTimer.style.display = 'none';
     if (uploadSection) uploadSection.style.display = 'none';
+    clearReceiverProgress();
   } else if (state === 3) {
     if (dropZone) dropZone.style.display = 'none';
     if (stagedSection) stagedSection.classList.add('is-hidden');
@@ -201,6 +204,16 @@ function setPageState(state) {
     if (responseTimer) responseTimer.style.display = 'none';
     if (uploadSection) uploadSection.style.display = 'block';
   }
+}
+
+function clearReceiverProgress() {
+  if (window.peerProgressStates) {
+    window.peerProgressStates = null;
+  }
+  const progressSec = document.getElementById('receiver-progress-section');
+  if (progressSec) progressSec.classList.add('is-hidden');
+  const listEl = document.getElementById('peer-progress-list');
+  if (listEl) listEl.innerHTML = '';
 }
 
 function updateSendButtonState() {
@@ -254,6 +267,11 @@ function setupSocket() {
     const others = peers.filter(p => p.peerId !== peerId);
     receiversCount = others.length;
     
+    // Cache peer device names
+    peers.forEach(p => {
+      knownPeers.set(p.peerId, p.deviceName || 'Client Node');
+    });
+
     document.getElementById("devicesStatus").textContent = `CONNECTED NODES: ${receiversCount} ONLINE`;
     
     updateSendButtonState();
@@ -374,14 +392,47 @@ function setupSocket() {
 
   sendSocket.on('download-progress', ({ fileId, receiverPeerId, loaded, total }) => {
     const percent = total ? Math.round((loaded / total) * 100) : 0;
+    
+    // Update local cache of peer progress
+    if (!window.peerProgressStates) {
+      window.peerProgressStates = new Map();
+    }
+    window.peerProgressStates.set(receiverPeerId, { loaded, total, percent });
+
+    // Show receiver progress section in the UI
+    const progressSec = document.getElementById('receiver-progress-section');
+    if (progressSec) progressSec.classList.remove('is-hidden');
+
+    // Render list of peer progress bars
+    const listEl = document.getElementById('peer-progress-list');
+    if (listEl) {
+      let html = '';
+      window.peerProgressStates.forEach((state, pId) => {
+        const pName = knownPeers.get(pId) || pId.substring(0, 8);
+        html += `
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.78rem; font-family: var(--font-mono);">
+              <span style="color: var(--text-primary); font-weight: 500;">🖥️ ${escapeHtml(pName)}</span>
+              <span style="color: var(--cyan); font-weight: 600;">${state.percent}%</span>
+            </div>
+            <div style="height: 4px; background: rgba(0, 0, 0, 0.08); border-radius: 999px; overflow: hidden;">
+              <div style="height: 100%; width: ${state.percent}%; background: linear-gradient(90deg, var(--cyan), var(--indigo)); transition: width 0.1s ease-out;"></div>
+            </div>
+          </div>
+        `;
+      });
+      listEl.innerHTML = html;
+    }
+
     if (!window.lastLoggedProgressPercents) {
       window.lastLoggedProgressPercents = new Map();
     }
     const key = `${fileId}-${receiverPeerId}`;
     const lastPercent = window.lastLoggedProgressPercents.get(key) || 0;
-    if (percent === 100 || percent - lastPercent >= 20) {
+    if (percent === 100 || percent - lastPercent >= 10) {
       window.lastLoggedProgressPercents.set(key, percent);
-      logToConsole(`PEER DOWNLOAD PROGRESS: ${percent}%`, 'info');
+      const peerName = knownPeers.get(receiverPeerId) || receiverPeerId.substring(0, 8);
+      logToConsole(`PEER [${peerName}] DOWNLOAD PROGRESS: ${percent}%`, 'info');
       if (percent === 100) {
         window.lastLoggedProgressPercents.delete(key);
       }
@@ -422,6 +473,7 @@ function setupSocket() {
 }
 
 function dequeueAndProceed() {
+  clearReceiverProgress();
   if (selectedQueue.length > 0) {
     selectedQueue.shift();
     selectedFile = selectedQueue[0] || null;
