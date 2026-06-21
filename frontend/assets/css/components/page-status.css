@@ -51,3 +51,34 @@
 .page-status.is-hidden {
   display: none !important;
 }
+
+/* Light Theme Overrides */
+html.light-theme .page-status {
+  border: var(--border-glass);
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--text-primary);
+}
+
+html.light-theme .page-status[data-type='success'] {
+  border-color: rgba(5, 150, 105, 0.25);
+  background: rgba(5, 150, 105, 0.06);
+  color: #065f46;
+}
+
+html.light-theme .page-status[data-type='warning'] {
+  border-color: rgba(217, 119, 6, 0.25);
+  background: rgba(217, 119, 6, 0.06);
+  color: #92400e;
+}
+
+html.light-theme .page-status[data-type='error'] {
+  border-color: rgba(225, 29, 72, 0.25);
+  background: rgba(225, 29, 72, 0.06);
+  color: #991b1b;
+}
+
+html.light-theme .page-status[data-type='info'] {
+  border-color: rgba(8, 145, 178, 0.25);
+  background: rgba(8, 145, 178, 0.06);
+  color: #155e75;
+}

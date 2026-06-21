@@ -196,3 +196,11 @@
     }
   }
 }
+
+/* Light Theme Overrides */
+html.light-theme .toast-close:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+html.light-theme .toast-progress {
+  background: rgba(0, 0, 0, 0.05);
+}

@@ -111,8 +111,13 @@ html.light-theme {
   --color-text-muted:      var(--text-muted);
   --color-text-on-dark:    var(--text-on-dark);
   --color-surface-panel:   var(--card-bg);
+  --color-surface-card:    rgba(255, 255, 255, 0.95);
+  --color-surface-glass:   rgba(255, 255, 255, 0.85);
+  --color-surface-muted:   rgba(0, 0, 0, 0.05);
   --border-thin:           var(--border-glass);
   --border-thick:          var(--border-glass-md);
+  --shadow-card:           var(--card-shadow);
+  --shadow-header:         var(--hdr-shadow);
 }
 
 /* ── Reset & Core ── */

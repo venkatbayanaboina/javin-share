@@ -27,13 +27,13 @@
   padding: var(--space-md) var(--space-lg);
   font-weight: 700;
   font-size: 1.1rem;
-  color: var(--color-text-on-dark);
+  color: #ffffff;
   background: linear-gradient(135deg, var(--color-brand-secondary), #764ba2);
 }
 
 .dialog-body {
   padding: var(--space-lg);
-  color: #333;
+  color: var(--color-text-primary);
   line-height: 1.5;
 }
 
