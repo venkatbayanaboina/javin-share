@@ -44,7 +44,7 @@
     <!-- State 1: Dropzone -->
     <div class="drop-zone anim2" id="fileDropZone">
       <div class="drop-icon-orb">📂</div>
-      <h3 style="font-family: var(--font-sans); font-size: 1.2rem; font-weight: 700; color: #fff;">Drop files here</h3>
+      <h3 style="font-family: var(--font-sans); font-size: 1.2rem; font-weight: 700; color: var(--text-primary);">Drop files here</h3>
       <p style="font-family: var(--font-sans); font-size: 0.85rem; color: var(--sub);">or click to browse — any file type, any size</p>
       <button type="button" class="browse-btn">Browse Files</button>
       <input type="file" id="fileInput" class="file-input-hidden" multiple style="display: none;" />
@@ -54,7 +54,7 @@
     <div id="staged-section" class="is-hidden">
       <div class="card card-accent-cyan-indigo anim3">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-          <h3 style="font-family: var(--font-sans); font-size: 1.05rem; font-weight: 700; color: #fff;">Selected Files</h3>
+          <h3 style="font-family: var(--font-sans); font-size: 1.05rem; font-weight: 700; color: var(--text-primary);">Selected Files</h3>
           <span class="pill cyan" id="staged-count-badge">0 FILES</span>
         </div>
         
@@ -62,7 +62,7 @@
           <!-- Populated dynamically by JS -->
         </div>
         
-        <div id="staged-summary" style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--sub); display: flex; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px; margin-top: 12px;">
+        <div id="staged-summary" style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--sub); display: flex; justify-content: space-between; border-top: var(--border-glass); padding-top: 12px; margin-top: 12px;">
           <span>CONDUIT READY</span>
           <span id="staged-stats-text">FILES: 0 · SIZE: 0 B</span>
         </div>
@@ -98,7 +98,7 @@
 
     <!-- State 4 & 5: Upload Progress and Stats Section -->
     <div id="upload-section" class="card card-accent-cyan-indigo anim3 is-hidden">
-      <h3 id="upload-title" style="font-family: var(--font-sans); font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 6px;">Upload Progress</h3>
+      <h3 id="upload-title" style="font-family: var(--font-sans); font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; border-bottom: var(--border-glass); padding-bottom: 6px;">Upload Progress</h3>
       <div id="upload-list" style="margin-bottom: 14px;">
         <!-- Filled dynamically by JS -->
       </div>
@@ -109,7 +109,7 @@
 
     <!-- Collapsible Real-Time Activity Log Console -->
     <div class="card anim4" style="padding: 0; position: relative; overflow: hidden;">
-      <div class="console-header" id="toggle-console-btn" style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
+      <div class="console-header" id="toggle-console-btn" style="padding: 12px 16px; border-bottom: var(--border-glass); display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
         <span style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); font-weight: 600; letter-spacing: 1px;">CONSOLE LOGS</span>
         <span id="toggle-console-text" style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--sub);">[ SHOW ]</span>
       </div>

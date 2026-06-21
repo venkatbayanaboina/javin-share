@@ -41,7 +41,7 @@
     <!-- Block 1: Device Name Input Card -->
     <div id="device-name-section" class="card card-accent-indigo-cyan anim2 is-hidden" style="max-width: 460px; margin: 40px auto; text-align: center;">
       <div style="font-size: 1.6rem; width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(99,102,241,.14); border: 1px solid rgba(99,102,241,.35); box-shadow: 0 0 20px rgba(99,102,241,.28); animation: orb-pulse 2.6s ease-in-out infinite;">🖥️</div>
-      <h2 style="font-family: var(--font-sans); font-size: 1.25rem; font-weight: 700; color: #fff;">Set Your Device Name</h2>
+      <h2 style="font-family: var(--font-sans); font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">Set Your Device Name</h2>
       <p style="font-family: var(--font-sans); font-size: 0.85rem; color: var(--sub);">This name will be visible to connecting clients</p>
       <input type="text" id="device-name-input" placeholder="e.g. DESKTOP-MAIN" maxlength="30" required style="margin-top: 8px;" />
       <button id="continue-btn" class="btn-primary" style="width: 100%;" type="button">Start Session →</button>
@@ -59,7 +59,7 @@
       <!-- State 2: NEW NODE DETECTED Banner -->
       <div id="new-node-banner" class="is-hidden" style="background: rgba(16, 185, 129, 0.08); border: 1px solid var(--emerald); border-radius: 12px; padding: 12px; font-family: var(--font-mono); font-size: 0.85rem; color: var(--emerald); display: flex; align-items: center; gap: 8px; animation: fadeup .3s ease-both;">
         <span>🟢 NEW NODE DETECTED:</span>
-        <span id="new-node-name" style="font-weight: 600; color: #fff;"></span>
+        <span id="new-node-name" style="font-weight: 600; color: var(--text-primary);"></span>
       </div>
 
       <!-- Grid Layout -->
@@ -107,7 +107,7 @@
               <div class="pin-val" id="session-pin">000 · 000</div>
             </div>
             
-            <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="border-top: var(--border-glass); padding-top: 12px; display: flex; flex-direction: column; gap: 8px;">
               <div style="font-family: var(--font-mono); font-size: 0.60rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--sub);">Expires in</div>
               <div id="pin-timer" style="font-family: var(--font-mono); font-size: 1.8rem; color: var(--amber); font-weight: 600;">--:--</div>
             </div>
@@ -117,17 +117,17 @@
         <!-- Right Column: Connected Devices & Overrides (State 2) -->
         <div id="status-panel" class="card card-accent-emerald-cyan anim4 is-hidden" style="display: flex; flex-direction: column; justify-content: space-between; gap: 16px;">
           <div>
-            <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--sub); letter-spacing: 0.12em; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 6px; margin-bottom: 12px;">CONNECTED NODES</div>
+            <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--sub); letter-spacing: 0.12em; text-transform: uppercase; border-bottom: var(--border-glass); padding-bottom: 6px; margin-bottom: 12px;">CONNECTED NODES</div>
             <!-- Connection status updates -->
             <div id="connection-status" class="connection-status status-waiting" style="display: none;"></div>
             
-            <ul id="connected-nodes-list" style="list-style: none; font-family: var(--font-mono); font-size: 0.85rem; color: #fff;">
+            <ul id="connected-nodes-list" style="list-style: none; font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-primary);">
               <li style="color: var(--muted);">NO NODES CONNECTED</li>
             </ul>
           </div>
 
           <!-- Block 7: Grace Period Controls (System Override) -->
-          <div id="grace-controls" class="is-hidden" style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 16px; margin-top: 16px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+          <div id="grace-controls" class="is-hidden" style="border-top: var(--border-glass); padding-top: 16px; margin-top: 16px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px;">
             <div style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--amber); letter-spacing: 0.14em; text-transform: uppercase;">SYSTEM OVERRIDE</div>
             <div class="override-timer" id="grace-countdown" style="font-family: var(--font-mono); font-size: 2.8rem; font-weight: 700; color: var(--amber); line-height: 1;">00:30</div>
             <div style="font-size: 0.76rem; color: var(--sub); margin-bottom: 10px;">A client has connected. Session will start automatically.</div>
@@ -158,9 +158,9 @@
       </div>
 
       <!-- Footer Panel -->
-      <footer class="anim5" style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-top: 10px;">
+      <footer class="anim5" style="border-top: var(--border-glass); padding-top: 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-top: 10px;">
         <div style="font-family: var(--font-mono); font-size: 1rem; font-weight: 600;">
-          <span style="color: var(--muted);">HOST:</span> <span class="current-device-name-txt" style="color: #fff; font-weight: 700;">Node</span>
+          <span style="color: var(--muted);">HOST:</span> <span class="current-device-name-txt" style="color: var(--text-primary); font-weight: 700;">Node</span>
         </div>
         <div class="footer-actions">
           <button id="reset-device-name-btn" class="btn-secondary" type="button">Change Name</button>

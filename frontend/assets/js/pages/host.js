@@ -55,7 +55,7 @@ async function copyTextToClipboard(text) {
           <div class="wrap" style="display: flex; align-items: center; justify-content: center; min-height: 100vh; box-sizing: border-box; padding: 20px;">
             <div class="card card-accent-rose" style="max-width: 440px; width: 100%; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 36px 28px; box-sizing: border-box;">
               <div style="font-size: 2.2rem; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(244,63,94,0.12); border: 1px solid rgba(244,63,94,0.28); margin-bottom: 6px; animation: orb-pulse 2.6s ease-in-out infinite;">🔒</div>
-              <h2 style="font-family: var(--font-sans); font-size: 1.4rem; font-weight: 700; color: #fff; margin: 0; letter-spacing: -0.01em;">Access Denied</h2>
+              <h2 style="font-family: var(--font-sans); font-size: 1.4rem; font-weight: 700; color: var(--text-primary); margin: 0; letter-spacing: -0.01em;">Access Denied</h2>
               <p style="font-family: var(--font-sans); font-size: 0.9rem; color: var(--sub); margin: 0; line-height: 1.5;">Only hosts can access this page. Please scan the QR code to join as a client.</p>
               <button onclick="window.location.href='/'" class="btn-primary" style="width: 100%; height: 46px; font-size: 0.95rem; font-weight: 700; margin-top: 8px;" type="button">Return to Main</button>
             </div>
@@ -73,7 +73,7 @@ async function copyTextToClipboard(text) {
               <div class="wrap" style="display: flex; align-items: center; justify-content: center; min-height: 100vh; box-sizing: border-box; padding: 20px;">
                 <div class="card card-accent-rose" style="max-width: 440px; width: 100%; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 36px 28px; box-sizing: border-box;">
                   <div style="font-size: 2.2rem; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(244,63,94,0.12); border: 1px solid rgba(244,63,94,0.28); margin-bottom: 6px; animation: orb-pulse 2.6s ease-in-out infinite;">⚠️</div>
-                  <h2 style="font-family: var(--font-sans); font-size: 1.4rem; font-weight: 700; color: #fff; margin: 0; letter-spacing: -0.01em;">Session Expired</h2>
+                  <h2 style="font-family: var(--font-sans); font-size: 1.4rem; font-weight: 700; color: var(--text-primary); margin: 0; letter-spacing: -0.01em;">Session Expired</h2>
                   <p style="font-family: var(--font-sans); font-size: 0.9rem; color: var(--sub); margin: 0; line-height: 1.5;">This session does not exist or has expired. Please start a new session.</p>
                   <button onclick="window.location.href='/'" class="btn-primary" style="width: 100%; height: 46px; font-size: 0.95rem; font-weight: 700; margin-top: 8px;" type="button">Start New Session</button>
                 </div>
@@ -87,7 +87,7 @@ async function copyTextToClipboard(text) {
             <div class="wrap" style="display: flex; align-items: center; justify-content: center; min-height: 100vh; box-sizing: border-box; padding: 20px;">
               <div class="card card-accent-rose" style="max-width: 440px; width: 100%; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 36px 28px; box-sizing: border-box;">
                 <div style="font-size: 2.2rem; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(244,63,94,0.12); border: 1px solid rgba(244,63,94,0.28); margin-bottom: 6px; animation: orb-pulse 2.6s ease-in-out infinite;">⚠️</div>
-                <h2 style="font-family: var(--font-sans); font-size: 1.4rem; font-weight: 700; color: #fff; margin: 0; letter-spacing: -0.01em;">Connection Error</h2>
+                <h2 style="font-family: var(--font-sans); font-size: 1.4rem; font-weight: 700; color: var(--text-primary); margin: 0; letter-spacing: -0.01em;">Connection Error</h2>
                 <p style="font-family: var(--font-sans); font-size: 0.9rem; color: var(--sub); margin: 0; line-height: 1.5;">Unable to connect to the session. Please check your network.</p>
                 <button onclick="window.location.href='/'" class="btn-primary" style="width: 100%; height: 46px; font-size: 0.95rem; font-weight: 700; margin-top: 8px;" type="button">Return to Main</button>
               </div>

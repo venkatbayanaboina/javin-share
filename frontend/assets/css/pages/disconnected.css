@@ -106,3 +106,15 @@
 .page-disconnected .metrics-table td.lbl {
   color: #94a3b8;
 }
+
+/* Light Theme Overrides for Disconnected Page */
+html.light-theme .page-disconnected .center-box h1,
+html.light-theme .page-disconnected .metrics-table td.val {
+  color: var(--text-primary);
+}
+html.light-theme .page-disconnected .divider {
+  background: rgba(0, 0, 0, 0.08);
+}
+html.light-theme .page-disconnected .metrics-table tr {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}

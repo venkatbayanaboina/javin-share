@@ -1400,3 +1400,16 @@ html.light-theme .page-receive {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Light Theme Overrides for Receive Page */
+html.light-theme .page-receive #reject-btn,
+html.light-theme .page-receive #exit-receive-btn {
+  background: rgba(225, 29, 72, 0.08) !important;
+  border: 1px solid rgba(225, 29, 72, 0.20) !important;
+  color: #e11d48 !important;
+}
+html.light-theme .page-receive #reject-btn:hover:not(:disabled),
+html.light-theme .page-receive #exit-receive-btn:hover:not(:disabled) {
+  background: #e11d48 !important;
+  color: #ffffff !important;
+}

@@ -56,14 +56,14 @@
     <!-- Section 2: Active Devices & Topology Map -->
     <div class="card card-accent-indigo-cyan anim3" style="position: relative; overflow: hidden;">
       <div class="devices-row" style="margin-bottom: 14px;">
-        <div style="display: flex; align-items: center; gap: 8px; font-family: var(--font-sans); font-size: 0.88rem; color: #fff; font-weight: 500;">
+        <div style="display: flex; align-items: center; gap: 8px; font-family: var(--font-sans); font-size: 0.88rem; color: var(--text-primary); font-weight: 500;">
           <div class="pulse-dot"></div>
           Active Nodes
         </div>
         <span class="pill info" id="devicesStatus"><span>0 NODE(S)</span></span>
       </div>
       
-      <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); letter-spacing: 1px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 6px; margin-bottom: 10px;">NETWORK TOPOLOGY MAP</div>
+      <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); letter-spacing: 1px; border-bottom: var(--border-glass); padding-bottom: 6px; margin-bottom: 10px;">NETWORK TOPOLOGY MAP</div>
       <pre id="topology-map">HOST
  │
  └── LOADING PEER NODES...</pre>
@@ -148,7 +148,7 @@
 
     <!-- Collapsible Real-Time Activity Log Console -->
     <div class="card anim6" style="padding: 0; position: relative; overflow: hidden;">
-      <div class="console-header" id="toggle-console-btn" style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
+      <div class="console-header" id="toggle-console-btn" style="padding: 12px 16px; border-bottom: var(--border-glass); display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
         <span style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); font-weight: 600; letter-spacing: 1px;">CONSOLE OUTPUT</span>
         <span id="toggle-console-text" style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--sub);">[ SHOW ]</span>
       </div>

@@ -78,7 +78,7 @@
 .page-send .file-row .file-name {
   font-family: var(--font-mono);
   font-size: 0.80rem;
-  color: #fff;
+  color: var(--text-primary);
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -138,7 +138,7 @@
 .page-send .upload-file-name {
   font-family: var(--font-mono);
   font-size: 0.825rem;
-  color: #fff;
+  color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -196,7 +196,7 @@
   font-family: var(--font-mono);
   font-size: 1.05rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary);
   letter-spacing: -0.02em;
 }
 .page-send #upload-stats .stat-value.indigo { color: var(--indigo); }

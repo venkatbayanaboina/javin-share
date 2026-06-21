@@ -12,7 +12,7 @@
 }
 .page-host .device-name-lbl {
   font-family: var(--font-mono);
-  font-size: 1.05rem; font-weight: 700; color: #fff;
+  font-size: 1.05rem; font-weight: 700; color: var(--text-primary);
   letter-spacing: .04em;
 }
 
@@ -48,7 +48,7 @@
 .page-host .pin-val {
   font-family: var(--font-mono);
   font-size: 2.6rem; font-weight: 700;
-  color: #fff; letter-spacing: .20em;
+  color: var(--text-primary); letter-spacing: .20em;
   text-shadow: 0 0 20px rgba(245,158,11,.20);
   display: flex; gap: 6px;
   margin-top: 8px;
@@ -234,5 +234,39 @@
 }
 .page-host footer .footer-actions button:active:not(:disabled) {
   transform: translateY(0) !important;
+}
+
+/* Light Theme Overrides for Host Page */
+html.light-theme .page-host .override-actions #extend-btn {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid rgba(0, 0, 0, 0.10) !important;
+  color: var(--text-primary) !important;
+}
+html.light-theme .page-host .override-actions #extend-btn:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.10) !important;
+  border-color: rgba(0, 0, 0, 0.18) !important;
+  color: var(--text-primary) !important;
+}
+html.light-theme .page-host footer .footer-actions #reset-device-name-btn {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid rgba(0, 0, 0, 0.10) !important;
+  color: var(--text-primary) !important;
+}
+html.light-theme .page-host footer .footer-actions #reset-device-name-btn:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.10) !important;
+  border-color: rgba(0, 0, 0, 0.18) !important;
+  color: var(--text-primary) !important;
+}
+html.light-theme .page-host footer .footer-actions #shutdown-btn {
+  background: rgba(225, 29, 72, 0.08) !important;
+  border: 1px solid rgba(225, 29, 72, 0.20) !important;
+  color: #e11d48 !important;
+}
+html.light-theme .page-host footer .footer-actions #shutdown-btn:hover:not(:disabled) {
+  background: #e11d48 !important;
+  color: #ffffff !important;
+}
+html.light-theme .page-host .terminal-loader-segmented .segment {
+  background: rgba(0, 0, 0, 0.08);
 }
 

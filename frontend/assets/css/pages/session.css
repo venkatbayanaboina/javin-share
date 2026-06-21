@@ -25,13 +25,13 @@
 }
 .page-session .info-val {
   font-family: var(--font-mono);
-  font-size: .90rem; font-weight: 600; color: #fff;
+  font-size: .90rem; font-weight: 600; color: var(--text-primary);
 }
 
 /* Topology Tree */
 .page-session #topology-map {
   font-family: var(--font-mono);
-  font-size: 0.85rem; color: #fff;
+  font-size: 0.85rem; color: var(--text-primary);
   line-height: 1.5; background: rgba(0, 0, 0, 0.3);
   padding: 18px; border-radius: var(--radius-sm);
   border: var(--border-glass); overflow-x: auto;
@@ -204,4 +204,30 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+/* Light Theme Overrides for Session Page */
+html.light-theme .page-session #topology-map {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  color: var(--text-primary);
+}
+html.light-theme .page-session .action-grid #historyBtn {
+  background: var(--btn-sec-bg) !important;
+  border: var(--btn-sec-border) !important;
+  color: var(--btn-sec-text) !important;
+}
+html.light-theme .page-session .action-grid #historyBtn:hover {
+  background: var(--btn-sec-hover-bg) !important;
+  border-color: var(--btn-sec-hover-border) !important;
+  color: var(--btn-sec-hover-text) !important;
+}
+html.light-theme .page-session .action-grid #exitBtn {
+  background: rgba(225, 29, 72, 0.08) !important;
+  border: 1px solid rgba(225, 29, 72, 0.20) !important;
+  color: #e11d48 !important;
+}
+html.light-theme .page-session .action-grid #exitBtn:hover {
+  background: #e11d48 !important;
+  color: #ffffff !important;
 }
