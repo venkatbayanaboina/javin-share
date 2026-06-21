@@ -17,10 +17,14 @@ try {
   const data = params.get('data');
   const duration = params.get('duration');
 
-  if (nodes) document.getElementById('stat-nodes').textContent = nodes;
-  if (files) document.getElementById('stat-files').textContent = files;
-  if (data) document.getElementById('stat-data').textContent = data;
-  if (duration) document.getElementById('stat-duration').textContent = duration;
+  if (nodes || files || data || duration) {
+    const container = document.getElementById('metrics-summary-container');
+    if (container) container.style.display = 'block';
+    if (nodes) document.getElementById('stat-nodes').textContent = nodes;
+    if (files) document.getElementById('stat-files').textContent = files;
+    if (data) document.getElementById('stat-data').textContent = data;
+    if (duration) document.getElementById('stat-duration').textContent = duration;
+  }
 
 } catch (_) {}
 

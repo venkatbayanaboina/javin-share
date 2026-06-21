@@ -25,6 +25,7 @@ let isRequesting = false;
 let receiversCount = 0;
 let consoleBody = null;
 let knownPeers = new Map();
+let activeXhr = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
   if (!window.FileShareUtils) {
@@ -207,6 +208,10 @@ function setPageState(state) {
 }
 
 function clearReceiverProgress() {
+  if (activeXhr) {
+    try { activeXhr.abort(); } catch (_) {}
+    activeXhr = null;
+  }
   if (window.peerProgressStates) {
     window.peerProgressStates = null;
   }
@@ -601,7 +606,8 @@ function executeUpload(fileId, offset = 0) {
   formData.append("fileId", fileId);
   formData.append("peerId", peerId);
 
-  const xhr = new XMLHttpRequest();
+  activeXhr = new XMLHttpRequest();
+  const xhr = activeXhr;
   xhr.open("POST", `/upload/${sessionId}?fileId=${encodeURIComponent(fileId)}`, true);
   
   if (offset > 0) {
@@ -655,6 +661,7 @@ function executeUpload(fileId, offset = 0) {
   };
 
   xhr.onload = () => {
+    activeXhr = null;
     if (xhr.status === 200) {
       const durationSec = Math.max(1, Math.round((Date.now() - startTime) / 1000));
       logToConsole(`TRANSMISSION SUCCESSFUL: ${selectedFile.name}`, 'success');
@@ -677,6 +684,7 @@ function executeUpload(fileId, offset = 0) {
   };
 
   xhr.onerror = async () => {
+    activeXhr = null;
     showError('Network socket failure.');
     resetState();
   };

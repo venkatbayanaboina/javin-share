@@ -22,29 +22,30 @@
     <h1>Session Ended</h1>
     <p>You have been disconnected from the session.</p>
     
-    <div class="divider"></div>
-
-    <!-- Session Summary Metrics -->
-    <table class="metrics-table">
-      <tbody>
-        <tr>
-          <td class="lbl">NODES_ENGAGED:</td>
-          <td class="val" id="stat-nodes">4</td>
-        </tr>
-        <tr>
-          <td class="lbl">FILES_STREAMED:</td>
-          <td class="val" id="stat-files">32</td>
-        </tr>
-        <tr>
-          <td class="lbl">TOTAL_DATA:</td>
-          <td class="val" id="stat-data">1.2 GB</td>
-        </tr>
-        <tr>
-          <td class="lbl">UPTIME_DURATION:</td>
-          <td class="val" id="stat-duration">15 MIN</td>
-        </tr>
-      </tbody>
-    </table>
+    <!-- Session Summary Metrics Container (Hidden by default unless actual parameters are supplied) -->
+    <div id="metrics-summary-container" style="display: none; width: 100%;">
+      <div class="divider"></div>
+      <table class="metrics-table" style="width: 100%;">
+        <tbody>
+          <tr>
+            <td class="lbl">NODES_ENGAGED:</td>
+            <td class="val" id="stat-nodes">4</td>
+          </tr>
+          <tr>
+            <td class="lbl">FILES_STREAMED:</td>
+            <td class="val" id="stat-files">32</td>
+          </tr>
+          <tr>
+            <td class="lbl">TOTAL_DATA:</td>
+            <td class="val" id="stat-data">1.2 GB</td>
+          </tr>
+          <tr>
+            <td class="lbl">UPTIME_DURATION:</td>
+            <td class="val" id="stat-duration">15 MIN</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <!-- Operational Actions -->
     <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
