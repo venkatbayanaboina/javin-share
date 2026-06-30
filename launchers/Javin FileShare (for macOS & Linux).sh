@@ -190,9 +190,8 @@ fi
 # 8. Set up Linux desktop entry if on Linux
 if [[ "${OSTYPE:-}" != darwin* ]]; then
   DESKTOP_FILE="$SCRIPT_DIR/Javin FileShare (for Linux).desktop"
-  if [ ! -f "$DESKTOP_FILE" ] || ! grep -q "Icon=" "$DESKTOP_FILE"; then
-    echo "=> Registering Linux Desktop Shortcuts..."
-    cat > "$DESKTOP_FILE" << EOF
+  echo "=> Registering Linux Desktop Shortcuts..."
+  cat > "$DESKTOP_FILE" << EOF
 [Desktop Entry]
 Version=1.0
 Type=Application
@@ -200,22 +199,21 @@ Name=JAVIN FileShare
 Comment=Cross-platform secure file sharing application
 Exec="$SCRIPT_DIR/Javin FileShare (for macOS & Linux).sh"
 Icon=$SCRIPT_DIR/icon.png
-Terminal=false
+Terminal=true
 Categories=Network;FileTransfer;
 EOF
-    chmod +x "$DESKTOP_FILE"
+  chmod +x "$DESKTOP_FILE"
 
-    if [ -d "$HOME/.local/share/applications" ]; then
-      cp "$DESKTOP_FILE" "$HOME/.local/share/applications/Javin FileShare.desktop"
-    fi
-    if [ -d "$HOME/Desktop" ]; then
-      cp "$DESKTOP_FILE" "$HOME/Desktop/Javin FileShare.desktop"
-      gio set "$HOME/Desktop/Javin FileShare.desktop" metadata::trusted true 2>/dev/null || true
-      chmod +x "$HOME/Desktop/Javin FileShare.desktop"
-    fi
-    echo "=> ✓ Shortcuts created!"
-    echo
+  if [ -d "$HOME/.local/share/applications" ]; then
+    cp "$DESKTOP_FILE" "$HOME/.local/share/applications/Javin FileShare.desktop"
   fi
+  if [ -d "$HOME/Desktop" ]; then
+    cp "$DESKTOP_FILE" "$HOME/Desktop/Javin FileShare.desktop"
+    gio set "$HOME/Desktop/Javin FileShare.desktop" metadata::trusted true 2>/dev/null || true
+    chmod +x "$HOME/Desktop/Javin FileShare.desktop"
+  fi
+  echo "=> ✓ Shortcuts created!"
+  echo
 fi
 
 # 9. Start the Node.js server in the background and open the browser

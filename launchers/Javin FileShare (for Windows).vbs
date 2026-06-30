@@ -1,16 +1,22 @@
-Dim objShell, objFSO, scriptPath
+Dim objShell, objFSO, scriptPath, projectRoot, backendPath, envPath, certPem, keyPem
 Set objShell = CreateObject("WScript.Shell")
 Set objFSO = CreateObject("Scripting.FileSystemObject")
 
-' Get the directory of the running script
+' Get the absolute path of the script directory and resolve project folders
 scriptPath = objFSO.GetParentFolderName(WScript.ScriptFullName)
+projectRoot = objFSO.GetAbsolutePathName(scriptPath & "\..")
+backendPath = objFSO.GetAbsolutePathName(projectRoot & "\backend")
+envPath = objFSO.GetAbsolutePathName(projectRoot & "\.env")
+certPem = objFSO.GetAbsolutePathName(backendPath & "\certs\cert.pem")
+keyPem = objFSO.GetAbsolutePathName(backendPath & "\certs\key.pem")
+
 objShell.CurrentDirectory = scriptPath
 
 ' Run PowerShell script silently to handle dynamic javin.share.[4char].local host generation
 Dim psCommand
 psCommand = "-NoProfile -ExecutionPolicy Bypass -Command """ & _
-            "if (!(Test-Path '..\.env') -and (Test-Path '..\.env.example')) { Copy-Item '..\.env.example' '..\.env' };" & _
-            "$envPath = '..\.env';" & _
+            "if (!(Test-Path '" & envPath & "') -and (Test-Path '" & projectRoot & "\.env.example" & "')) { Copy-Item '" & projectRoot & "\.env.example" & "' '" & envPath & "' };" & _
+            "$envPath = '" & envPath & "';" & _
             "$customHost = '';" & _
             "if (Test-Path $envPath) {" & _
             "  $match = Select-String -Path $envPath -Pattern '^CUSTOM_HOST=';" & _
@@ -20,8 +26,8 @@ psCommand = "-NoProfile -ExecutionPolicy Bypass -Command """ & _
             "  $customHost = 'javin.share.local';" & _
             "  (Get-Content $envPath) | Where-Object { $_ -notlike 'CUSTOM_HOST=*' } | Set-Content $envPath;" & _
             "  Add-Content $envPath 'CUSTOM_HOST=' + $customHost;" & _
-            "  Remove-Item '..\backend\certs\cert.pem' -ErrorAction SilentlyContinue;" & _
-            "  Remove-Item '..\backend\certs\key.pem' -ErrorAction SilentlyContinue;" & _
+            "  Remove-Item '" & certPem & "' -ErrorAction SilentlyContinue;" & _
+            "  Remove-Item '" & keyPem & "' -ErrorAction SilentlyContinue;" & _
             "}" & _
             """"
 objShell.Run "powershell.exe " & psCommand, 0, True
@@ -38,7 +44,7 @@ End If
 On Error GoTo 0
 
 ' 2. Check if setup has been run (certificates exist)
-If Not objFSO.FileExists("..\backend\certs\cert.pem") Or Not objFSO.FileExists("..\backend\certs\key.pem") Then
+If Not objFSO.FileExists(certPem) Or Not objFSO.FileExists(keyPem) Then
     Dim runSetup
     runSetup = MsgBox("Setup is required to generate HTTPS certificates before running the app." & vbCrLf & _
                       "Would you like to run the setup tool now?", 36, "JAVIN FileShare Setup Required")
@@ -50,15 +56,14 @@ If Not objFSO.FileExists("..\backend\certs\cert.pem") Or Not objFSO.FileExists("
     WScript.Quit 1
 End If
 
-' 3. Check if dependencies are installed
-If Not objFSO.FolderExists("..\backend\node_modules") Then
+' 3. Check if dependencies are installed (run npm install inside backend directory)
+If Not objFSO.FolderExists(backendPath & "\node_modules") Then
     MsgBox "First-time launch: Installing dependencies. This will take a moment...", 64, "JAVIN FileShare"
+    objShell.CurrentDirectory = backendPath
     objShell.Run "cmd.exe /c npm install --silent", 0, True
 End If
 
 ' 4. Run the Node.js server silently with a hidden window (style 0)
-Dim projectRoot
-projectRoot = objFSO.GetParentFolderName(scriptPath)
 objShell.CurrentDirectory = projectRoot
 objShell.Run "node backend/server.js", 0, False
 
@@ -69,10 +74,10 @@ WScript.Sleep 2000
 Dim customHost, displayHost
 customHost = ""
 displayHost = "localhost"
-If objFSO.FileExists("..\.env") Then
+If objFSO.FileExists(envPath) Then
     On Error Resume Next
     Dim objFile, strLine
-    Set objFile = objFSO.OpenTextFile("..\.env", 1)
+    Set objFile = objFSO.OpenTextFile(envPath, 1)
     If Err.Number = 0 Then
         Do Until objFile.AtEndOfStream
             strLine = objFile.ReadLine

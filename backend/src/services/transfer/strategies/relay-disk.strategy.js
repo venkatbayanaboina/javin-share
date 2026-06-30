@@ -185,6 +185,11 @@ export class RelayDiskStrategy extends TransferStrategy {
           file.resume();
         } else {
           fileMetadata.size = bytesWritten;
+          const ok = writeStream.write(chunk);
+          if (!ok) {
+            file.pause();
+            writeStream.once('drain', () => file.resume());
+          }
         }
       });
 
@@ -199,8 +204,6 @@ export class RelayDiskStrategy extends TransferStrategy {
           else if (!uploadRejected && !finalized) rejectUpload(500, 'Upload failed');
         });
       });
-
-      file.pipe(writeStream);
     });
 
     busboy.on('error', (err) => {
@@ -218,7 +221,7 @@ export class RelayDiskStrategy extends TransferStrategy {
       const resolvedFileId = uploadedFileId || fileId;
       if (!resolvedFileId) {
         try {
-          if (writeStream) writeStream.end();
+          if (writeStream) writeStream.destroy();
         } catch (_) {}
         if (clientOffset === 0) {
           try {
@@ -228,17 +231,12 @@ export class RelayDiskStrategy extends TransferStrategy {
         return res.status(400).json({ error: 'Missing or invalid fileId' });
       }
 
-      try {
-        if (writeStream) {
-          writeStream.end(() => {
-            finalizeUpload(resolvedFileId);
-          });
-        } else {
+      if (writeStream) {
+        writeStream.end(() => {
           finalizeUpload(resolvedFileId);
-        }
-      } catch (e) {
-        logger.error('Failed to finish write stream:', e);
-        rejectUpload(500, 'Failed to save file');
+        });
+      } else {
+        finalizeUpload(resolvedFileId);
       }
     });
 

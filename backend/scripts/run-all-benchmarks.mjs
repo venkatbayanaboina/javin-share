@@ -16,8 +16,8 @@ function sleep(ms) {
 function parseArgs(argv) {
   const opts = {
     receivers: 1,
-    networkLabel: 'loopback',
-    fileMb: 10240, // 10GB default
+    networkLabel: 'loopback-disk-write',
+    fileMb: 4096, // 4GB default to prevent disk exhaustion
   };
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
@@ -53,7 +53,8 @@ function runBenchmark(port, sessionId, fileMb, strategy, receivers, networkLabel
       '--file-id', fileId,
       '--strategy', strategy,
       '--receivers', String(receivers),
-      '--network-label', networkLabel
+      '--network-label', networkLabel,
+      '--mode', 'both'
     ];
 
     const proc = spawn('node', args, { env: { ...process.env } });

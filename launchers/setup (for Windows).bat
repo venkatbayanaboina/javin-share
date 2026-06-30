@@ -172,11 +172,11 @@ if exist "%BACKEND_DIR%\certs\cert.pem" (
 
   echo => Creating desktop shortcut...
   :: Create Windows desktop shortcut using PowerShell
-  powershell -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut(\"$Home\Desktop\JAVIN FileShare.lnk\"); $Shortcut.TargetPath = \"%SCRIPT_DIR%start (for Windows).vbs\"; $Shortcut.WorkingDirectory = \"%SCRIPT_DIR%\"; if (Test-Path \"%SCRIPT_DIR%icon.ico\") { $Shortcut.IconLocation = \"%SCRIPT_DIR%icon.ico\" }; $Shortcut.Save()" 2>nul
+  powershell -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut(\"$env:PUBLIC\Desktop\JAVIN FileShare.lnk\"); $Shortcut.TargetPath = \"%SCRIPT_DIR%Javin FileShare (for Windows).vbs\"; $Shortcut.WorkingDirectory = \"%SCRIPT_DIR%\"; if (Test-Path \"%SCRIPT_DIR%icon.ico\") { $Shortcut.IconLocation = \"%SCRIPT_DIR%icon.ico\" }; $Shortcut.Save()" 2>nul
   if %errorlevel% neq 0 (
     echo => ⚠️ Warning: Could not create desktop shortcut.
   ) else (
-    echo => ✓ Desktop shortcut created successfully on your Desktop!
+    echo => ✓ Desktop shortcut created successfully on your Public Desktop!
   )
 ) else (
   echo => ERROR: Certificate file not found!
