@@ -8,7 +8,7 @@ This document describes the trust boundaries and controls implemented for the LA
 |-------|------|------------|
 | Host machine | Any peer stops the Node process | `POST /api/shutdown` and `announce-shutdown` require **host** `peerId` in an active session |
 | Session PIN (6 digits) | Brute force on join | Per-IP (+ per-session) rate limit, lockout, `429` + `Retry-After` |
-| Uploaded files | Disk exhaustion / path traversal | Busboy `fileSize` limit; sanitized filenames; storage path derived from server-side ids |
+| Uploaded files | Disk exhaustion / path traversal | Busboy `fileSize` limit; sanitized filenames; storage path derived from validated ids (`fileId` rejected unless it matches `[a-zA-Z0-9_-]{1,64}` at the socket handler, the coordinator, and the strategy) |
 | Downloads | Path traversal / header injection | Resolve stored path under `uploads/`; safe `Content-Disposition` |
 | Debug data | Queue state leak | `/debug/queues` **removed** |
 
@@ -39,7 +39,7 @@ Applies to `POST /api/verify-pin` and `POST /api/find-session-by-pin`.
 
 - `MAX_FILE_SIZE_BYTES` (default 50 GiB) enforced via Busboy `limits.fileSize` and stream byte counting.
 - Single file per request (`limits.files: 1`).
-- `fileId` must match `[a-zA-Z0-9_-]{1,64}`.
+- `fileId` must match `[a-zA-Z0-9_-]{1,64}` — enforced for **every** source: `x-file-id` header, `?fileId=` query, multipart form field, and the socket `request-to-send` payload. The coordinator re-validates before any strategy uses the id, and `relay-disk` re-checks as defense-in-depth, because the id is interpolated into on-disk paths (`uploads/{sessionId}-{fileId}`, `spool-{sessionId}-{fileId}`).
 
 ### Download safety
 

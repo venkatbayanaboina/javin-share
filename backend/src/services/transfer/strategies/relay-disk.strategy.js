@@ -33,13 +33,16 @@ export class RelayDiskStrategy extends TransferStrategy {
     let fileMetadata;
     let uploadRejected = false;
     let bytesWritten = 0;
-    
+
     // Check if we are resuming (appending)
     const headerOffset = req.headers['x-upload-offset'] || req.headers['upload-offset'];
     const queryOffset = req.query.offset;
     const clientOffset = parseInt(headerOffset || queryOffset || '0', 10);
 
-    const tempPath = path.join(config.uploadsDir, `${sessionId}-tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    const tempPath = path.join(
+      config.uploadsDir,
+      `${sessionId}-tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    );
     let finalized = false;
     let busboyFinished = false;
 
@@ -74,7 +77,9 @@ export class RelayDiskStrategy extends TransferStrategy {
                 path: filePath,
                 size,
               });
-              logger.info(`Persisted partial upload ${resolvedFileId}: ${size} bytes after disconnect`);
+              logger.info(
+                `Persisted partial upload ${resolvedFileId}: ${size} bytes after disconnect`,
+              );
             }
           } else if (clientOffset > 0 && fs.existsSync(filePath)) {
             const size = fs.statSync(filePath).size;
@@ -122,6 +127,12 @@ export class RelayDiskStrategy extends TransferStrategy {
       if (!res.writableEnded) persistPartialUpload();
     });
 
+    // Defense-in-depth: the coordinator validates header/query fileIds, but this strategy
+    // must never trust that — resolvedFileId is interpolated into on-disk paths below.
+    if (fileId != null && !isSafeId(fileId)) {
+      return rejectUpload(400, 'Invalid file id');
+    }
+
     busboy.on('field', (fieldname, val) => {
       if (fieldname === 'fileId' && isSafeId(val)) {
         uploadedFileId = val;
@@ -149,14 +160,16 @@ export class RelayDiskStrategy extends TransferStrategy {
         }
         const existingSize = fs.statSync(filePath).size;
         if (existingSize !== clientOffset) {
-          logger.warn(`Resume size mismatch: Client offset ${clientOffset}, existing size ${existingSize}`);
+          logger.warn(
+            `Resume size mismatch: Client offset ${clientOffset}, existing size ${existingSize}`,
+          );
           return rejectUpload(409, 'Resume offset mismatch', { bytesReceived: existingSize });
         }
         bytesWritten = existingSize;
       }
 
       const safeName = sanitizeFilename(info.filename);
-      
+
       try {
         writeStream = fs.createWriteStream(actualFileWritePath, { flags: writeFlags });
         writeStream.on('error', (err) => {
@@ -173,9 +186,10 @@ export class RelayDiskStrategy extends TransferStrategy {
         name: safeName,
         type: info.mimeType || 'application/octet-stream',
         path: filePath,
-        size: clientOffset > 0 && session.activeFiles.has(resolvedFileId)
-          ? session.activeFiles.get(resolvedFileId).size
-          : 0,
+        size:
+          clientOffset > 0 && session.activeFiles.has(resolvedFileId)
+            ? session.activeFiles.get(resolvedFileId).size
+            : 0,
       };
 
       file.on('data', (chunk) => {
@@ -266,7 +280,7 @@ export class RelayDiskStrategy extends TransferStrategy {
         fileMetadata.path = filePath;
         fileMetadata.name = sanitizeFilename(fileMetadata.name);
         fileMetadata.size = finalSize;
-        
+
         session.activeFiles.set(resolvedFileId, fileMetadata);
         res.json({ success: true, fileId: resolvedFileId, bytesReceived: finalSize });
       } catch (e) {
@@ -330,7 +344,16 @@ export class RelayDiskStrategy extends TransferStrategy {
       const start = parseInt(parts[0], 10);
       const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
 
-      if (start >= fileSize || end >= fileSize || start > end) {
+      // NaN/negative starts slip past comparison checks and would crash createReadStream — answer 416 instead.
+      if (
+        Number.isNaN(start) ||
+        Number.isNaN(end) ||
+        start < 0 ||
+        end < 0 ||
+        start >= fileSize ||
+        end >= fileSize ||
+        start > end
+      ) {
         res.status(416);
         res.setHeader('Content-Range', `bytes */${fileSize}`);
         return res.end();

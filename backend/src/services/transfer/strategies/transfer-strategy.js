@@ -11,7 +11,7 @@ export class TransferStrategy {
    * @param {string} fileId
    * @returns {Promise<void>}
    */
-  async handleUpload(req, res, session, fileId) {
+  async handleUpload(_req, _res, _session, _fileId) {
     throw new Error('handleUpload not implemented');
   }
 
@@ -24,7 +24,7 @@ export class TransferStrategy {
    * @param {string} receiverPeerId
    * @returns {Promise<void>}
    */
-  async handleDownload(req, res, session, fileId, receiverPeerId) {
+  async handleDownload(_req, _res, _session, _fileId, _receiverPeerId) {
     throw new Error('handleDownload not implemented');
   }
 }

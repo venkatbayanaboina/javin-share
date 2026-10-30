@@ -2,6 +2,8 @@
 
 Baseline measurements for all strategies under different network interfaces and client concurrencies.
 
+**This file is the append-only source of record for benchmark numbers.** Report-style snapshots in `docs/evaluation_of_architecture.md` are derived from it. Note: the 2026-06-21 10 GB loopback rows below and the 10 GB table in the report (§5) are two separate runs taken the same day with differing absolute throughput — both are genuine; neither is an error. For claims, prefer the most recent run and state the run date.
+
 ## Results
 
 | Date | File size | Strategy | Network | Receivers | Upload Mbps | Download Mbps | TTFB (ms) | Notes |

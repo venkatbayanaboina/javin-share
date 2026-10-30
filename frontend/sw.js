@@ -1,4 +1,4 @@
-const CACHE_NAME = 'javin-fileshare-v1';
+const CACHE_NAME = 'javin-fileshare-v3';
 const STATIC_ASSETS = [
   '/',
   '/host.html',
@@ -7,6 +7,10 @@ const STATIC_ASSETS = [
   '/send-files.html',
   '/receive-files.html',
   '/session-ended.html',
+  '/history.html',
+  '/manifest.json',
+  '/assets/icons.svg',
+  '/assets/icon.png',
   '/assets/css/main.css',
   '/assets/js/core/index.js',
   '/assets/js/core/storage.js',

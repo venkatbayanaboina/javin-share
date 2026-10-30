@@ -16,5 +16,5 @@ export function registerRoutes(app, deps) {
   app.use(createPagesRouter());
   app.use(createSessionRouter(deps));
   app.use(createUploadRouter());
-  app.use(createDownloadRouter(deps));
+  app.use(createDownloadRouter());
 }

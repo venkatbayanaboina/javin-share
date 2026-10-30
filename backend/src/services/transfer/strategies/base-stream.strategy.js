@@ -1,4 +1,3 @@
-import { PassThrough } from 'node:stream';
 import { TransferStrategy } from './transfer-strategy.js';
 import { config } from '../../../config.js';
 import { logger } from '../../../logger.js';
@@ -14,7 +13,7 @@ export class BaseStreamSession {
     this.senderSocketId = senderSocketId;
     /** @type {Map<string, import('http').ServerResponse>} */
     this.downloads = new Map();
-    /** @type {Map<string, PassThrough>} */
+    /** @type {Map<string, import('node:stream').PassThrough>} */
     this.branches = new Map();
     this.uploadStarted = false;
     this.uploadCompleted = false;
@@ -42,7 +41,9 @@ export class BaseStreamStrategy extends TransferStrategy {
     }
 
     if (streamSession.downloads.size === 0) {
-      logger.warn(`❌ No receivers connected in time for transfer ${streamSession.fileId}. Canceling.`);
+      logger.warn(
+        `❌ No receivers connected in time for transfer ${streamSession.fileId}. Canceling.`,
+      );
       this.deps.io.to(streamSession.senderSocketId).emit('send-rejected', {
         fileId: streamSession.fileId,
         reason: 'No receivers accepted and connected to download the file.',
@@ -58,7 +59,9 @@ export class BaseStreamStrategy extends TransferStrategy {
       `🚀 Triggering start-upload for sender socket ${streamSession.senderSocketId} (${streamSession.downloads.size} active receiver(s) connected)`,
     );
 
-    this.deps.io.to(streamSession.senderSocketId).emit('start-upload', { fileId: streamSession.fileId });
+    this.deps.io
+      .to(streamSession.senderSocketId)
+      .emit('start-upload', { fileId: streamSession.fileId });
 
     for (const receiverPeerId of streamSession.downloads.keys()) {
       const receiver = session.peers.get(receiverPeerId);

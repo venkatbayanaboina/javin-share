@@ -7,6 +7,7 @@ dist/
 # Runtime / generated
 backend/uploads/
 backend/uploads-test/
+backend/test/uploads-test/
 backend/certs/
 backend/device_names.json
 *.log

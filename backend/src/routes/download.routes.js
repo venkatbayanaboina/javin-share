@@ -3,7 +3,7 @@ import { logger } from '../logger.js';
 import { isSafeId } from '../utils/ids.js';
 import { getTransferCoordinator } from '../services/transfer/coordinator.service.js';
 
-export function createDownloadRouter(deps) {
+export function createDownloadRouter() {
   const router = Router();
 
   router.get('/download/:sessionId/:fileId', (req, res) => {

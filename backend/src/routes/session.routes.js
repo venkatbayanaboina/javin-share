@@ -2,9 +2,13 @@ import { Router } from 'express';
 import QRCode from 'qrcode';
 import { logger } from '../logger.js';
 import { store } from '../state/store.js';
-import { peersOnPage, PeerPage } from '../services/peer-page.service.js';
 import { getGraceState } from '../services/grace-redirect.service.js';
-import { buildPinUrl, buildLocalUrl, createSession, invalidateSessionById } from '../services/session.service.js';
+import {
+  buildPinUrl,
+  buildLocalUrl,
+  createSession,
+  invalidateSessionById,
+} from '../services/session.service.js';
 import { getAllDeviceNames, getDeviceName } from '../services/device-names.service.js';
 import { assertHostPeer } from '../services/peer-auth.service.js';
 import {
@@ -131,10 +135,6 @@ export function createSessionRouter(deps) {
     let session = store.currentHostSessionId
       ? store.sessions.get(store.currentHostSessionId)
       : null;
-    const clientsConnected = session
-      ? Array.from(session.peers.values()).some((p) => p.role === 'client')
-      : false;
-    const refreshRequested = req.query.refresh === '1';
 
     // Single active session enforcement:
     // If a session is already active (exists in store and has not expired), we reuse it.
@@ -185,13 +185,19 @@ export function createSessionRouter(deps) {
       session.peers.set(peerId, {
         peerId,
         socketId: `mock-socket-id-${i}`,
-        role: 'client'
+        role: 'client',
       });
     }
 
     const fileMetadata = { name: 'benchmark.bin', size: Number(req.query.size || 0) };
     const coordinator = getTransferCoordinator();
-    coordinator.initializeStreamSession(fileId, fileMetadata, expectedReceivers, 'mock-sender-socket-id', session);
+    coordinator.initializeStreamSession(
+      fileId,
+      fileMetadata,
+      expectedReceivers,
+      'mock-sender-socket-id',
+      session,
+    );
 
     res.json({ success: true });
   });
@@ -199,9 +205,7 @@ export function createSessionRouter(deps) {
   router.get('/api/session-details/:sessionId', (req, res) => {
     const session = store.sessions.get(req.params.sessionId);
     if (session) {
-      const activePeers = Array.from(session.peers.values()).filter(
-        (p) => !p.isDisconnected,
-      );
+      const activePeers = Array.from(session.peers.values()).filter((p) => !p.isDisconnected);
       res.json({
         pinExpiry: session.pinExpiry,
         peerCount: activePeers.length,

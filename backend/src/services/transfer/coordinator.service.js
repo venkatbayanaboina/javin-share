@@ -6,6 +6,7 @@ import { RelayBufferedStrategy } from './strategies/relay-buffered.strategy.js';
 import { config } from '../../config.js';
 import { logger } from '../../logger.js';
 import { store } from '../../state/store.js';
+import { isSafeId } from '../../utils/ids.js';
 
 export class TransferCoordinatorService {
   constructor(deps) {
@@ -41,10 +42,22 @@ export class TransferCoordinatorService {
     const defaultStrategy = config.transfer.defaultStrategy;
     if (defaultStrategy === 'relay-buffered') {
       const bufferedStrategy = this.strategies.get('relay-buffered');
-      return bufferedStrategy.initializeSession(fileId, fileMetadata, expectedReceivers, senderSocketId, session);
+      return bufferedStrategy.initializeSession(
+        fileId,
+        fileMetadata,
+        expectedReceivers,
+        senderSocketId,
+        session,
+      );
     }
     const streamStrategy = this.strategies.get('relay-stream');
-    return streamStrategy.initializeSession(fileId, fileMetadata, expectedReceivers, senderSocketId, session);
+    return streamStrategy.initializeSession(
+      fileId,
+      fileMetadata,
+      expectedReceivers,
+      senderSocketId,
+      session,
+    );
   }
 
   /**
@@ -68,6 +81,9 @@ export class TransferCoordinatorService {
    */
   async handleUpload(req, res) {
     const { sessionId } = req.params;
+    if (!isSafeId(sessionId)) {
+      return res.status(400).json({ error: 'Invalid session id' });
+    }
     const session = store.sessions.get(sessionId);
     if (!session) {
       return res.status(404).json({ error: 'Session not found' });
@@ -75,6 +91,11 @@ export class TransferCoordinatorService {
 
     // Resolve fileId from active transfer or query or header (can be null/undefined for traditional multipart form)
     const fileId = req.headers['x-file-id'] || req.query.fileId || session.activeTransfer?.fileId;
+    // fileId can arrive from client-controlled headers/query — it is interpolated into
+    // on-disk paths by the strategies, so it must never contain path separators.
+    if (fileId != null && !isSafeId(fileId)) {
+      return res.status(400).json({ error: 'Invalid file id' });
+    }
 
     const strategy = this.resolveStrategy(fileId);
     logger.info(`🎯 Delegating upload using strategy: ${strategy.constructor.name}`);
@@ -88,13 +109,23 @@ export class TransferCoordinatorService {
     const { sessionId, fileId } = req.params;
     const receiverPeerId = req.query.receiver;
 
+    if (
+      !isSafeId(sessionId) ||
+      !isSafeId(fileId) ||
+      (receiverPeerId && !isSafeId(receiverPeerId))
+    ) {
+      return res.status(400).json({ error: 'Invalid session, file, or receiver id' });
+    }
+
     const session = store.sessions.get(sessionId);
     if (!session) {
       return res.status(404).json({ error: 'Session not found' });
     }
 
     const strategy = this.resolveStrategy(fileId);
-    logger.info(`🎯 Delegating download for file ${fileId} using strategy: ${strategy.constructor.name}`);
+    logger.info(
+      `🎯 Delegating download for file ${fileId} using strategy: ${strategy.constructor.name}`,
+    );
     return strategy.handleDownload(req, res, session, fileId, receiverPeerId);
   }
 }

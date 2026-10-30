@@ -18,7 +18,10 @@ if (fs.existsSync(envPath)) {
       if (idx > 0) {
         const key = trimmed.slice(0, idx).trim();
         let val = trimmed.slice(idx + 1).trim();
-        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+        if (
+          (val.startsWith('"') && val.endsWith('"')) ||
+          (val.startsWith("'") && val.endsWith("'"))
+        ) {
           val = val.slice(1, -1);
         }
         if (process.env[key] === undefined) {
@@ -30,7 +33,6 @@ if (fs.existsSync(envPath)) {
     console.error('Error loading .env file:', err);
   }
 }
-
 
 export const config = {
   port: Number(process.env.PORT) || 4000,
@@ -45,11 +47,13 @@ export const config = {
   transfer: {
     // Safe default per Section 23: disk relay until stream mode is explicitly enabled
     defaultStrategy: process.env.TRANSFER_DEFAULT_STRATEGY || 'relay-disk',
-    enableStreamRelay: process.env.TRANSFER_ENABLE_STREAM_RELAY !== 'false',
+    // Opt-in: stream relay is off unless TRANSFER_ENABLE_STREAM_RELAY === 'true' (matches README + .env.example)
+    enableStreamRelay: process.env.TRANSFER_ENABLE_STREAM_RELAY === 'true',
     streamRelayTimeoutMs: Number(process.env.TRANSFER_STREAM_RELAY_TIMEOUT_MS) || 30000,
     chunkSizeBytes: Number(process.env.TRANSFER_CHUNK_SIZE_BYTES) || 8 * 1024 * 1024,
     spoolThresholdBytes: Number(process.env.TRANSFER_SPOOL_THRESHOLD_BYTES) || 256 * 1024 * 1024,
-    maxReceiverBufferSize: Number(process.env.TRANSFER_MAX_RECEIVER_BUFFER_SIZE) || 16 * 1024 * 1024,
+    maxReceiverBufferSize:
+      Number(process.env.TRANSFER_MAX_RECEIVER_BUFFER_SIZE) || 16 * 1024 * 1024,
     enableBufferedBackpressure: process.env.TRANSFER_ENABLE_BUFFERED_BACKPRESSURE === 'true',
   },
   pinMaxAttempts: Number(process.env.PIN_MAX_ATTEMPTS) || 8,

@@ -93,7 +93,7 @@ Javin-Share-/
 │   │       ├── transfer/         # Coordinator & Strategies (disk, stream, buffered)
 │   │       ├── session.service   # Host-client handshake & state orchestration
 │   │       └── download-queue    # Multi-client queue and backpressure services
-│   └── test/                     # 34-test Suite (unit & integration)
+│   └── test/                     # 44-test suite (unit & integration)
 ├── frontend/
 │   ├── host.html                 # Host admin panel (PIN/QR generator)
 │   ├── join-pin.html             # Client pin verification portal
@@ -109,8 +109,12 @@ Javin-Share-/
 │   ├── SECURITY.md               # LAN security model and rate-limit controls
 │   └── benchmarks/               # Network performance logs & LAN benchmark configurations
 ├── package.json                  # Root script orchestration
-├── setup.bat / setup.sh          # Native platform installer scripts
-└── start.sh                      # Native platform execution scripts
+└── launchers/                    # Native platform launchers & installers
+    ├── setup (for Windows).bat
+    ├── Javin FileShare (for macOS & Linux).sh
+    ├── FileShare (for macOS).command
+    ├── Javin FileShare (for Linux).desktop
+    └── Javin FileShare (for Windows).vbs
 ```
 
 *Note: Legacy endpoints (such as `/main.html`, `/index.html`) automatically issue **301 permanent redirects** to the correct, modern thinned functional shells.*
@@ -127,7 +131,7 @@ Javin-Share-/
 ## Quick Start
 
 ### 1. Windows Execution
-Double-click `setup.bat` (automatically provisions certs, installs modules, and spins up the server), or run:
+Double-click `launchers/setup (for Windows).bat` (automatically checks privileges, provisions certs, installs modules, and spins up the server), or run:
 ```cmd
 cd backend
 npm install
@@ -135,10 +139,11 @@ node server.js
 ```
 
 ### 2. macOS / Linux Execution
-Execute the shell launcher to automatically run configuration audits and boot:
+Execute the shell launcher to automatically locate Node.js, run configuration audits and boot:
 ```bash
-./start.sh
+"./launchers/Javin FileShare (for macOS & Linux).sh"
 ```
+On macOS you can simply double-click `launchers/FileShare (for macOS).command`.
 Or run manually:
 ```bash
 cd backend
@@ -161,7 +166,7 @@ cd backend && npm install
 # Boot development environment with hot-reloading
 npm run dev
 
-# Run comprehensive 34-test suite (unit, integration, and strategy tests)
+# Run comprehensive 44-test suite (unit, integration, and strategy tests)
 npm test
 
 # Run isolated transfer optimization strategy tests
@@ -186,6 +191,8 @@ npm run format:check
 | `TRANSFER_DEFAULT_STRATEGY` | `String` | `'relay-disk'` | Default fallback transfer mode (`relay-disk`, `relay-buffered`). |
 | `TRANSFER_ENABLE_STREAM_RELAY`| `Boolean`| `false` | Set `true` to enable pipe-through stream modes. |
 | `TRANSFER_SPOOL_THRESHOLD_BYTES`| `Number`| `268,435,456` | Spool boundary for buffered strategy (default: 256 MiB). |
+| `TRANSFER_CHUNK_SIZE_BYTES` | `Number` | `8,388,608` | Chunk buffer size for stream relays (default: 8 MiB). |
+| `TRANSFER_MAX_RECEIVER_BUFFER_SIZE` | `Number` | `16,777,216` | Per-receiver queue cap before a stalled receiver is dropped (default: 16 MB). |
 
 ---
 

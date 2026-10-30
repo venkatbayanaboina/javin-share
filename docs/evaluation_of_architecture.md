@@ -168,7 +168,9 @@ The table below maps the operational thresholds and breakpoints identified durin
 ### Automated Routing Policy
 Based on these breakpoints, the JAVIN Share Transfer Coordinator applies the following routing logic:
 > **"Use `relay-stream` for active concurrent clients up to $N_{\text{stream}}$ for files smaller than 1GB. Fallback to `relay-buffered` if clients connect late to avoid restarting streams, and default to `relay-disk` if the file size exceeds the RAM Page-Cache cap or client count crosses the Event Loop lag threshold."**
-## 5. Actual Benchmark Results (100 MB Payload)
+## 9. Actual Benchmark Results (100 MB Payload)
+
+Raw measurement log for all runs (including the two differing 10 GB loopback result sets in §5 and `docs/benchmarks/BASELINE.md`): see `docs/benchmarks/BASELINE.md` — it is the append-only source of record; the tables in this report are selected snapshots.
 
 The following measurements were collected automatically on the local interface (Network: loopback-disk-write, Receivers: 1):
 
@@ -179,5 +181,6 @@ The following measurements were collected automatically on the local interface (
 | **`relay-buffered`** | 3358.9 Mbps | 1451.0 Mbps | 7 ms |
 
 ### Key Takeaways from Benchmarks:
-1. **TTFB Latency**: `relay-stream` and `relay-buffered` achieve near-zero TTFB because the receiver receives chunks instantly, while `relay-disk` must wait for the entire file write to finish first.
-2. **Transfer Efficiency**: Direct memory relaying via `relay-stream` avoids disk write-read roundtrips, reducing local system load.
+1. **At 100 MB, `relay-disk` posts the lowest TTFB (6 ms) and the highest download throughput.** With a small payload the disk write finalizes almost instantly, so the streaming strategies' advantage (skipping write-finalization) has nothing to exploit, and the ~7–8 ms gap reflects their in-memory pipe overhead at this scale.
+2. **The streaming TTFB advantage appears only on large payloads where write-finalization time dominates** — see §5: at 10 GB, `relay-stream` (8 ms) and `relay-buffered` (10 ms) beat `relay-disk` (15 ms). Strategy selection should therefore weigh file size, not assume streaming is always faster.
+3. **Transfer Efficiency**: Direct memory relaying via `relay-stream` avoids disk write-read roundtrips, reducing local system load — the trade-off is lower aggregate download throughput at small payload sizes (1439.2 Mbps vs 4548.8 Mbps here).

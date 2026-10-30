@@ -1,344 +1,147 @@
-export function accessDeniedPage() {
+/**
+ * Server-rendered status pages (403 access-denied / not-found / expired).
+ * Self-contained: no external fonts, no JS dependencies — must render
+ * even under error conditions. Visual language matches the modern UI.
+ */
+
+const TONES = {
+  danger: {
+    iconBg: 'rgba(220, 38, 38, 0.10)',
+    iconBorder: 'rgba(220, 38, 38, 0.25)',
+    iconColor: '#dc2626',
+  },
+  warning: {
+    iconBg: 'rgba(217, 119, 6, 0.10)',
+    iconBorder: 'rgba(217, 119, 6, 0.25)',
+    iconColor: '#b45309',
+  },
+};
+
+/**
+ * @param {{ tone: 'danger' | 'warning', icon: string, title: string, message: string }} opts
+ */
+function renderStatusPage({ tone, icon, title, message }) {
+  const t = TONES[tone];
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Access Denied</title>
+  <meta name="robots" content="noindex" />
+  <title>${title}</title>
   <style>
-    :root {
-      --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      --bg-gradient: radial-gradient(circle at 50% 50%, #0b1528 0%, #030712 100%);
-      --border-glass: 1px solid rgba(255, 255, 255, 0.08);
-      --blur-glass: blur(16px);
-      --radius-md: 16px;
-      --radius-sm: 10px;
-      --sub: #94a3b8;
-    }
+    :root { color-scheme: light dark; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      margin: 0;
-      padding: 20px;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: var(--bg-gradient);
-      color: #fff;
-      font-family: var(--font-sans);
-      box-sizing: border-box;
+      padding: 24px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f4f6fb;
+      color: #0f172a;
+      -webkit-font-smoothing: antialiased;
+    }
+    @media (prefers-color-scheme: dark) {
+      body { background: #0b1220; color: #f1f5f9; }
+      .card { background: #111a2c; border-color: rgba(148, 163, 184, 0.16); box-shadow: 0 16px 48px rgba(0, 0, 0, 0.44); }
+      .message { color: #a3b0c2; }
+      .btn { background: #3b82f6; }
+      .btn:hover { background: #2563eb; }
     }
     .card {
-      background: rgba(255, 255, 255, 0.02);
-      backdrop-filter: var(--blur-glass);
-      -webkit-backdrop-filter: var(--blur-glass);
-      border: var(--border-glass);
-      border-radius: var(--radius-md);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-      max-width: 440px;
       width: 100%;
-      text-align: center;
+      max-width: 420px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 18px;
-      padding: 36px 28px;
-      box-sizing: border-box;
-      position: relative;
-    }
-    .card::before {
-      content: '';
-      position: absolute; top: 0; left: 0; right: 0; height: 2px;
-      background: linear-gradient(90deg, transparent, rgba(244,63,94,.55), rgba(244,63,94,.40), transparent);
-      border-radius: var(--radius-md) var(--radius-md) 0 0;
+      gap: 16px;
+      padding: 40px 32px;
+      text-align: center;
+      background: #ffffff;
+      border: 1px solid rgba(15, 23, 42, 0.10);
+      border-radius: 16px;
+      box-shadow: 0 16px 48px rgba(15, 23, 42, 0.08);
     }
     .icon {
-      font-size: 2.2rem;
-      width: 64px;
-      height: 64px;
-      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(244, 63, 94, 0.12);
-      border: 1px solid rgba(244, 63, 94, 0.28);
-      margin-bottom: 6px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: ${t.iconBg};
+      border: 1px solid ${t.iconBorder};
+      color: ${t.iconColor};
     }
-    h1 {
-      font-size: 1.4rem;
-      font-weight: 700;
-      margin: 0;
-      letter-spacing: -0.01em;
-    }
-    p {
-      font-size: 0.9rem;
-      color: var(--sub);
-      margin: 0;
-      line-height: 1.5;
-    }
+    .icon svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    h1 { font-size: 1.35rem; font-weight: 650; letter-spacing: -0.01em; }
+    .message { font-size: 0.925rem; line-height: 1.55; color: #475569; }
     .btn {
-      width: 100%;
-      height: 46px;
-      border-radius: var(--radius-sm);
-      border: none;
-      font-family: var(--font-sans);
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: #fff;
-      cursor: pointer;
-      background: linear-gradient(135deg, #06b6d4 0%, #6366f1 100%);
-      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
-      transition: all 0.2s;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      width: 100%;
       margin-top: 8px;
+      padding: 12px 20px;
+      font: inherit;
+      font-size: 0.925rem;
+      font-weight: 600;
+      color: #ffffff;
+      background: #2563eb;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
       text-decoration: none;
+      transition: background 160ms ease;
     }
-    .btn:hover {
-      transform: translateY(-2px);
-      filter: brightness(1.1);
-      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.45);
-    }
+    .btn:hover { background: #1d4ed8; color: #ffffff; }
   </style>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="card">
-    <div class="icon">🔒</div>
-    <h1>Access Denied</h1>
-    <p>This session is not active or you are not the host. Only the current session host can access this page.</p>
-    <a href="/" class="btn">Return to Main</a>
-  </div>
+  <main class="card">
+    <div class="icon">${icon}</div>
+    <h1>${title}</h1>
+    <p class="message">${message}</p>
+    <a href="/" class="btn">Back to home</a>
+  </main>
 </body>
 </html>`;
+}
+
+const ICON_SEARCH_X =
+  '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8.5" y1="8.5" x2="13.5" y2="13.5"/><line x1="13.5" y1="8.5" x2="8.5" y2="13.5"/></svg>';
+const ICON_CLOCK =
+  '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+const ICON_LOCK =
+  '<svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+
+export function accessDeniedPage() {
+  return renderStatusPage({
+    tone: 'danger',
+    icon: ICON_LOCK,
+    title: 'Access denied',
+    message:
+      'This page belongs to an active session host. Scan the QR code or use the session PIN to join instead.',
+  });
 }
 
 export function sessionNotFoundPage() {
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Session Not Found</title>
-  <style>
-    :root {
-      --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      --bg-gradient: radial-gradient(circle at 50% 50%, #0b1528 0%, #030712 100%);
-      --border-glass: 1px solid rgba(255, 255, 255, 0.08);
-      --blur-glass: blur(16px);
-      --radius-md: 16px;
-      --radius-sm: 10px;
-      --sub: #94a3b8;
-    }
-    body {
-      margin: 0;
-      padding: 20px;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--bg-gradient);
-      color: #fff;
-      font-family: var(--font-sans);
-      box-sizing: border-box;
-    }
-    .card {
-      background: rgba(255, 255, 255, 0.02);
-      backdrop-filter: var(--blur-glass);
-      -webkit-backdrop-filter: var(--blur-glass);
-      border: var(--border-glass);
-      border-radius: var(--radius-md);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-      max-width: 440px;
-      width: 100%;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 18px;
-      padding: 36px 28px;
-      box-sizing: border-box;
-      position: relative;
-    }
-    .card::before {
-      content: '';
-      position: absolute; top: 0; left: 0; right: 0; height: 2px;
-      background: linear-gradient(90deg, transparent, rgba(244,63,94,.55), rgba(244,63,94,.40), transparent);
-      border-radius: var(--radius-md) var(--radius-md) 0 0;
-    }
-    .icon {
-      font-size: 2.2rem;
-      width: 64px;
-      height: 64px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(244, 63, 94, 0.12);
-      border: 1px solid rgba(244, 63, 94, 0.28);
-      margin-bottom: 6px;
-    }
-    h1 {
-      font-size: 1.4rem;
-      font-weight: 700;
-      margin: 0;
-      letter-spacing: -0.01em;
-    }
-    p {
-      font-size: 0.9rem;
-      color: var(--sub);
-      margin: 0;
-      line-height: 1.5;
-    }
-    .btn {
-      width: 100%;
-      height: 46px;
-      border-radius: var(--radius-sm);
-      border: none;
-      font-family: var(--font-sans);
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: #fff;
-      cursor: pointer;
-      background: linear-gradient(135deg, #06b6d4 0%, #6366f1 100%);
-      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
-      transition: all 0.2s;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      margin-top: 8px;
-      text-decoration: none;
-    }
-    .btn:hover {
-      transform: translateY(-2px);
-      filter: brightness(1.1);
-      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.45);
-    }
-  </style>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
-</head>
-<body>
-  <div class="card">
-    <div class="icon">⚠️</div>
-    <h1>Session Not Found</h1>
-    <p>This session does not exist or has expired. Please scan the QR code again to join a valid session.</p>
-    <a href="/" class="btn">Return to Main</a>
-  </div>
-</body>
-</html>`;
+  return renderStatusPage({
+    tone: 'warning',
+    icon: ICON_SEARCH_X,
+    title: 'Session not found',
+    message:
+      'This session does not exist or is no longer active. Scan the QR code again to join a valid session.',
+  });
 }
 
 export function sessionExpiredPage() {
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Session Expired</title>
-  <style>
-    :root {
-      --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      --bg-gradient: radial-gradient(circle at 50% 50%, #0b1528 0%, #030712 100%);
-      --border-glass: 1px solid rgba(255, 255, 255, 0.08);
-      --blur-glass: blur(16px);
-      --radius-md: 16px;
-      --radius-sm: 10px;
-      --sub: #94a3b8;
-    }
-    body {
-      margin: 0;
-      padding: 20px;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--bg-gradient);
-      color: #fff;
-      font-family: var(--font-sans);
-      box-sizing: border-box;
-    }
-    .card {
-      background: rgba(255, 255, 255, 0.02);
-      backdrop-filter: var(--blur-glass);
-      -webkit-backdrop-filter: var(--blur-glass);
-      border: var(--border-glass);
-      border-radius: var(--radius-md);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-      max-width: 440px;
-      width: 100%;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 18px;
-      padding: 36px 28px;
-      box-sizing: border-box;
-      position: relative;
-    }
-    .card::before {
-      content: '';
-      position: absolute; top: 0; left: 0; right: 0; height: 2px;
-      background: linear-gradient(90deg, transparent, rgba(244,63,94,.55), rgba(244,63,94,.40), transparent);
-      border-radius: var(--radius-md) var(--radius-md) 0 0;
-    }
-    .icon {
-      font-size: 2.2rem;
-      width: 64px;
-      height: 64px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(244, 63, 94, 0.12);
-      border: 1px solid rgba(244, 63, 94, 0.28);
-      margin-bottom: 6px;
-    }
-    h1 {
-      font-size: 1.4rem;
-      font-weight: 700;
-      margin: 0;
-      letter-spacing: -0.01em;
-    }
-    p {
-      font-size: 0.9rem;
-      color: var(--sub);
-      margin: 0;
-      line-height: 1.5;
-    }
-    .btn {
-      width: 100%;
-      height: 46px;
-      border-radius: var(--radius-sm);
-      border: none;
-      font-family: var(--font-sans);
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: #fff;
-      cursor: pointer;
-      background: linear-gradient(135deg, #06b6d4 0%, #6366f1 100%);
-      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
-      transition: all 0.2s;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      margin-top: 8px;
-      text-decoration: none;
-    }
-    .btn:hover {
-      transform: translateY(-2px);
-      filter: brightness(1.1);
-      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.45);
-    }
-  </style>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
-</head>
-<body>
-  <div class="card">
-    <div class="icon">⚠️</div>
-    <h1>Session Expired</h1>
-    <p>This session has expired. Please scan the QR code again to join a new session.</p>
-    <a href="/" class="btn">Return to Main</a>
-  </div>
-</body>
-</html>`;
+  return renderStatusPage({
+    tone: 'warning',
+    icon: ICON_CLOCK,
+    title: 'Session expired',
+    message: 'This session has ended. Ask the host for a new QR code or PIN to join again.',
+  });
 }
