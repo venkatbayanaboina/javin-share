@@ -7,7 +7,6 @@
 **JAVIN FileShare** is a secure, high-performance local network (LAN) file-sharing platform designed for rapid, direct transfers between devices on the same Wi-Fi network or mobile hotspot. By eliminating cloud dependencies, JAVIN FileShare ensures maximum bandwidth utilization and strict data privacy—your files never leave your local physical network.
 
 ---
-
 ## Key Features
 
 * **Multi-Platform Support**: Fully responsive web client compatible with Windows, macOS, Linux, iOS, and Android modern browsers.
