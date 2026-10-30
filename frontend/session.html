@@ -3,13 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>JAVIN FileShare — Console Dashboard</title>
+  <title>JAVIN FileShare — Session</title>
   <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#020617" />
+  <meta name="theme-color" content="#0b1220" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="stylesheet" href="assets/css/main.css" />
-  <link rel="stylesheet" href="assets/css/pages/session.css" />
   <script>
     (function() {
       const t = localStorage.getItem('theme');
@@ -21,142 +20,86 @@
 </head>
 <body class="page-session">
   <div class="wrap">
-    
-    <!-- Page status alerts -->
     <div id="page-status" class="page-status is-hidden" role="status" aria-live="polite"></div>
 
-    <!-- Header Component -->
-    <div class="hdr anim1">
-      <span class="hdr-title">JAVIN FileShare</span>
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <button id="theme-toggle" type="button" title="Toggle Theme">☀️</button>
-        <span class="hdr-badge" style="color:#10b981; background:rgba(16,185,129,.14); border:1px solid rgba(16,185,129,.28)">● Live Session</span>
+    <header class="app-header rise">
+      <a class="app-brand" href="/" style="text-decoration:none">
+        <span class="app-brand-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></span>
+        JAVIN FileShare
+      </a>
+      <div class="app-header-actions">
+        <button id="theme-toggle" type="button" title="Toggle theme" aria-label="Toggle theme"></button>
+        <span class="pill success">Live</span>
+      </div>
+    </header>
+
+    <div class="card rise" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+      <div>
+        <div class="field-label">Device</div>
+        <div id="deviceName" style="font-weight:600">—</div>
+      </div>
+      <div>
+        <div class="field-label">System</div>
+        <div id="deviceInfo" class="muted" style="font-size:var(--text-sm)">—</div>
+      </div>
+      <div>
+        <div class="field-label">Role</div>
+        <div id="userRole" style="font-weight:600">—</div>
       </div>
     </div>
 
-    <!-- Section 1: System Status & Details -->
-    <div class="card card-accent-indigo-cyan anim2" style="position: relative; overflow: hidden;">
-      <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); letter-spacing: 1px; border-bottom: var(--border-glass); padding-bottom: 6px;">SYSTEM STATUS</div>
-      <div class="info-grid">
-        <div class="info-cell">
-          <div class="info-lbl">DEVICE</div>
-          <div class="info-val" id="deviceName">LOADING...</div>
-        </div>
-        <div class="info-cell">
-          <div class="info-lbl">OS</div>
-          <div class="info-val" id="deviceInfo">LOADING...</div>
-        </div>
-        <div class="info-cell">
-          <div class="info-lbl">ROLE</div>
-          <div class="info-val" id="userRole">LOADING...</div>
-        </div>
+    <div class="card rise">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px">
+        <span style="display:inline-flex;align-items:center;gap:8px;font-weight:600"><span class="pulse-dot" style="width:8px;height:8px;border-radius:50%;background:var(--success);display:inline-block"></span> Connected devices</span>
+        <span class="pill primary" id="devicesStatus">0 devices</span>
+      </div>
+      <div class="card-inset" style="padding:12px">
+        <pre id="topology-map" style="margin:0;font-family:var(--font-mono);font-size:var(--text-sm);line-height:1.5;white-space:pre-wrap;color:var(--text-2)">Loading…</pre>
       </div>
     </div>
 
-    <!-- Section 2: Active Devices & Topology Map -->
-    <div class="card card-accent-indigo-cyan anim3" style="position: relative; overflow: hidden;">
-      <div class="devices-row" style="margin-bottom: 14px;">
-        <div style="display: flex; align-items: center; gap: 8px; font-family: var(--font-sans); font-size: 0.88rem; color: var(--text-primary); font-weight: 500;">
-          <div class="pulse-dot"></div>
-          Active Nodes
-        </div>
-        <span class="pill info" id="devicesStatus"><span>0 NODE(S)</span></span>
-      </div>
-      
-      <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); letter-spacing: 1px; border-bottom: var(--border-glass); padding-bottom: 6px; margin-bottom: 10px;">NETWORK TOPOLOGY MAP</div>
-      <pre id="topology-map">HOST
- │
- └── LOADING PEER NODES...</pre>
+    <div id="transfer-status" class="banner banner-success is-hidden" role="status"></div>
+
+    <div id="response-timer" class="card card-warning is-hidden" style="text-align:center;padding:16px">
+      <div style="font-weight:600;color:var(--warning)">Waiting for responses — <span id="countdown">30</span>s</div>
+      <div class="muted" style="font-size:var(--text-sm)">Responses: <span id="response-count">0</span> / <span id="total-receivers">0</span></div>
     </div>
 
-    <!-- Transfer alert banner -->
-    <div id="transfer-status" class="is-hidden" style="background: rgba(16, 185, 129, 0.05); border: 1px solid var(--emerald); color: var(--emerald); padding: 12px; font-family: var(--font-mono); font-size: 0.8rem; border-radius: 8px; text-align: center;">Waiting for host to connect. Please wait...</div>
-
-    <!-- Response timer modal banner -->
-    <div id="response-timer" class="card card-accent-amber anim4 is-hidden" style="text-align: center; position: relative; overflow: hidden;">
-      <div class="timer-label" style="font-family: var(--font-mono); font-size: 0.9rem; color: var(--amber);">
-        Waiting for responses: <span id="countdown" style="animation: flash 1s ease-in-out infinite;">30</span>s
-      </div>
-      <div class="response-count" style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--sub);">
-        Responses: <span id="response-count">0</span> / <span id="total-receivers">0</span>
+    <div class="card rise">
+      <div class="card-header"><span class="card-title">Actions</span></div>
+      <div id="sendLockStatus" class="banner banner-warning is-hidden" style="margin-bottom:12px"><span class="lock-text">Sending is currently locked</span> <span class="lock-message muted">— another transfer is in progress.</span></div>
+      <div id="hostNavigationBlocked" class="banner banner-warning is-hidden" style="margin-bottom:12px">Cannot leave while a transfer is active.</div>
+      <div class="action-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <button id="sendBtn" class="btn-primary" type="button">Send files</button>
+        <button id="receiveBtnDecorative" class="btn-secondary" type="button" disabled>Receive — listening</button>
+        <button id="historyBtn" class="btn-secondary" type="button">History</button>
+        <button id="exitBtn" class="btn-exit" type="button">Leave session</button>
       </div>
     </div>
 
-    <!-- Section 3: Operational Console -->
-    <div class="card card-accent-indigo-cyan anim4" style="position: relative; overflow: hidden;">
-      <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--sub); letter-spacing: 1px; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 6px;">OPERATIONAL ACTIONS</div>
-      
-      <!-- Lock status banners -->
-      <!-- Lock status note points -->
-      <div id="sendLockStatus" class="lock-banner is-hidden" style="margin-bottom: 12px;">
-        <span class="bullet">•</span>
-        <div>
-          <strong class="lock-text">Send button is locked:</strong>
-          <span class="lock-message lock-sub">Another node holds the transmission line.</span>
-        </div>
+    <div id="transfer-history" class="card rise">
+      <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+        <span class="card-title">Transfer history</span>
+        <span class="pill" id="history-count">0</span>
       </div>
-      
-      <div id="hostNavigationBlocked" class="nav-block-banner is-hidden" style="margin-bottom: 12px;">
-        <span class="bullet">•</span>
-        <div>
-          <strong class="nav-block-text">Navigation Blocked:</strong>
-          <span class="lock-message nav-block-sub">Host cannot exit during active conduit transfers.</span>
-        </div>
-      </div>
-      
-      <div class="action-grid">
-        <button id="sendBtn" class="btn-primary" type="button" style="height: 50px; width: 100%;">
-          [ SEND FILES ]
-        </button>
-        <button id="receiveBtnDecorative" class="btn-secondary" type="button" disabled style="height: 50px; background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.04); color: var(--muted); cursor: not-allowed; width: 100%;">
-          [ RECEIVE: LISTENING... ]
-        </button>
-      </div>
-      
-      <div class="action-grid" style="margin-bottom: 0;">
-        <button id="historyBtn" class="btn-secondary" type="button" style="height: 50px; width: 100%;">[ VIEW AUDIT LOGS ]</button>
-        <button id="exitBtn" class="btn-exit" type="button" style="height: 50px; width: 100%;">[ EXIT SESSION ]</button>
-      </div>
-    </div>
-
-    <!-- Block 6: Transfer History -->
-    <div id="transfer-history" class="hist-card anim5">
-      <div class="hist-hdr">
-        <span class="hist-lbl">TRANSMISSION HISTORY</span>
-        <span class="hist-cnt" id="history-count">0 ENTRIES</span>
-      </div>
-      <div class="table-wrap" style="overflow-x: auto; width: 100%;">
-        <table class="hist-table" id="history-table" style="display: none;">
-          <thead>
-            <tr>
-              <th>File Name</th>
-              <th>Size</th>
-              <th>Direction</th>
-              <th>Time</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="history-body">
-            <!-- Populated dynamically -->
-          </tbody>
+      <div class="table-container">
+        <table class="table" id="history-table" style="display:none">
+          <thead><tr><th>File</th><th class="num">Size</th><th>Direction</th><th>Time</th><th>Status</th></tr></thead>
+          <tbody id="history-body"></tbody>
         </table>
-        <div class="history-empty" id="history-empty">
-          No transmission records found for this node.
-        </div>
+        <div class="table-empty" id="history-empty">No transfers yet for this session.</div>
       </div>
     </div>
 
-    <!-- Collapsible Real-Time Activity Log Console -->
-    <div class="card anim6" style="padding: 0; position: relative; overflow: hidden;">
-      <div class="console-header" id="toggle-console-btn" style="padding: 12px 16px; border-bottom: var(--border-glass); display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
-        <span style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); font-weight: 600; letter-spacing: 1px;">CONSOLE OUTPUT</span>
-        <span id="toggle-console-text" style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--sub);">[ SHOW ]</span>
-      </div>
-      <div id="console-body" style="display: none; padding: 12px 16px; max-height: 140px; overflow-y: auto; font-family: var(--font-mono); font-size: 0.75rem; line-height: 1.5; color: var(--indigo);">
-        <div><span style="color: var(--muted);">[SYSTEM]</span> CONSOLE INTERFACE STAGED</div>
+    <div class="card rise log-console" style="padding:0;overflow:hidden">
+      <button type="button" class="log-console-header" id="toggle-console-btn" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:12px 16px">
+        <span class="field-label" style="margin:0">Activity log</span>
+        <span id="toggle-console-text" class="muted" style="font-size:var(--text-xs)">Show</span>
+      </button>
+      <div id="console-body" class="log-console-body is-hidden" style="max-height:140px;overflow-y:auto;padding:12px 16px;font-family:var(--font-mono);font-size:var(--text-sm);line-height:1.5">
+        <div><span class="muted">[System]</span> Ready</div>
       </div>
     </div>
-
   </div>
 
   <script src="/socket.io/socket.io.js"></script>

@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const body = document.getElementById('audit-logs-body');
       body.innerHTML = `
         <tr>
-          <td colspan="5" style="text-align: center; padding: 40px 0; color: var(--color-brand-danger);">
+          <td colspan="5" style="text-align: center; padding: 40px 0; color: var(--danger);">
             FAILED TO RETRIEVE AUDIT LOGS FROM HOST
           </td>
         </tr>
@@ -59,8 +59,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (myItems.length === 0) {
       body.innerHTML = `
         <tr>
-          <td colspan="5" style="text-align: center; padding: 40px 0; color: var(--color-text-muted); font-style: italic;">
-            NO TRANSMISSION RECORDS FOUND FOR THIS NODE
+          <td colspan="5" style="text-align: center; padding: 40px 0; color: var(--text-3); font-style: italic;">
+            No transfers found
           </td>
         </tr>
       `;
@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .map((item) => {
         const isSender = item.sender === peerId;
         const directionStr = isSender ? 'OUTGOING' : 'INCOMING';
-        const directionColor = isSender ? 'var(--color-brand-primary)' : 'var(--color-brand-success)';
+        const directionColor = isSender ? 'var(--primary)' : 'var(--success)';
         
         // Simple timestamp format: hh:mm:ss
         let timeStr = '—';
@@ -85,19 +85,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const statusStr = (item.status || 'pending').toUpperCase();
         const statusColor =
           statusStr === 'COMPLETED' || statusStr === 'SUCCESS'
-            ? 'var(--color-brand-success)'
+            ? 'var(--success)'
             : statusStr === 'FAILED'
-            ? 'var(--color-brand-danger)'
-            : 'var(--color-brand-warning)';
+            ? 'var(--danger)'
+            : 'var(--warning)';
 
         return `
           <tr style="border-bottom: 1px solid rgba(255,255,255,0.04); font-family: var(--font-family-mono);">
-            <td style="padding: 12px 8px; color: var(--color-text-secondary);">${escapeHtml(timeStr)}</td>
+            <td style="padding: 12px 8px; color: var(--text-2);">${escapeHtml(timeStr)}</td>
             <td style="padding: 12px 8px; color: ${directionColor}; font-weight: 600;">${directionStr}</td>
-            <td style="padding: 12px 8px; color: var(--color-text-primary); font-weight: 500; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            <td style="padding: 12px 8px; color: var(--text-1); font-weight: 500; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
               ${escapeHtml(item.fileName)}
             </td>
-            <td style="padding: 12px 8px; text-align: right; color: var(--color-text-secondary);">${formatFileSize(item.fileSize)}</td>
+            <td style="padding: 12px 8px; text-align: right; color: var(--text-2);">${formatFileSize(item.fileSize)}</td>
             <td style="padding: 12px 8px; text-align: right; color: ${statusColor}; font-weight: 600; font-size: 0.8rem;">[ ${statusStr} ]</td>
           </tr>
         `;

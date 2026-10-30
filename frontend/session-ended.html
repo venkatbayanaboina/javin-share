@@ -3,60 +3,34 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>JAVIN FileShare — Session Terminated</title>
+  <title>JAVIN FileShare — Session Ended</title>
   <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#020617" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0b1220" />
   <link rel="stylesheet" href="assets/css/main.css" />
-  <link rel="stylesheet" href="assets/css/pages/disconnected.css" />
 </head>
 <body class="page-disconnected">
-  
-  <div class="center-box">
-    
-    <!-- Warning Icon Orb -->
-    <div class="warning-orb">⚠️</div>
-    
-    <!-- Title and Sub -->
-    <h1>Session Ended</h1>
-    <p>You have been disconnected from the session.</p>
-    
-    <!-- Session Summary Metrics Container (Hidden by default unless actual parameters are supplied) -->
-    <div id="metrics-summary-container" style="display: none; width: 100%;">
-      <div class="divider"></div>
-      <table class="metrics-table" style="width: 100%;">
-        <tbody>
-          <tr>
-            <td class="lbl">NODES_ENGAGED:</td>
-            <td class="val" id="stat-nodes">4</td>
-          </tr>
-          <tr>
-            <td class="lbl">FILES_STREAMED:</td>
-            <td class="val" id="stat-files">32</td>
-          </tr>
-          <tr>
-            <td class="lbl">TOTAL_DATA:</td>
-            <td class="val" id="stat-data">1.2 GB</td>
-          </tr>
-          <tr>
-            <td class="lbl">UPTIME_DURATION:</td>
-            <td class="val" id="stat-duration">15 MIN</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+  <div class="wrap wrap-narrow" style="min-height:70vh;display:flex;align-items:center;justify-content:center">
+    <div class="card rise" style="text-align:center;padding:32px 24px;display:flex;flex-direction:column;gap:16px;align-items:center;max-width:460px;width:100%">
+      <span style="width:56px;height:56px;border-radius:50%;background:var(--warning-soft);border:1px solid var(--warning-border);display:inline-flex;align-items:center;justify-content:center;color:var(--warning)"><svg class="icon icon-lg"><use href="assets/icons.svg#alert-circle"/></svg></span>
+      <div>
+        <h1 style="margin:0">Session ended</h1>
+        <p class="muted" style="margin:6px 0 0">You’ve been disconnected from the session.</p>
+      </div>
 
-    <!-- Operational Actions -->
-    <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
-      <button type="button" id="init-btn" class="btn-primary" style="width: 100%;">
-        [ INITIALIZE NEW SESSION ]
-      </button>
-      <button type="button" id="home-btn" class="btn-secondary" style="width: 100%;">
-        [ RETURN HOME ]
-      </button>
-    </div>
+      <div id="metrics-summary-container" class="card-inset is-hidden" style="width:100%;text-align:left;display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between;font-size:var(--text-sm)"><span class="muted">Devices</span> <strong id="stat-nodes">—</strong></div>
+        <div style="display:flex;justify-content:space-between;font-size:var(--text-sm)"><span class="muted">Files shared</span> <strong id="stat-files">—</strong></div>
+        <div style="display:flex;justify-content:space-between;font-size:var(--text-sm)"><span class="muted">Total data</span> <strong id="stat-data">—</strong></div>
+        <div style="display:flex;justify-content:space-between;font-size:var(--text-sm)"><span class="muted">Duration</span> <strong id="stat-duration">—</strong></div>
+      </div>
+      <!-- Legacy table for JS compatibility (hidden, JS may still reference .metrics-table) -->
+      <table class="metrics-table is-hidden" aria-hidden="true"><tbody><tr><td id="stat-nodes-alt"></td></tr></tbody></table>
 
+      <div style="display:flex;flex-direction:column;gap:10px;width:100%">
+        <button type="button" id="init-btn" class="btn-primary btn-block">Start new session</button>
+        <button type="button" id="home-btn" class="btn-secondary btn-block">Go home</button>
+      </div>
+    </div>
   </div>
 
   <script type="module" src="assets/js/pages/session-ended.js"></script>

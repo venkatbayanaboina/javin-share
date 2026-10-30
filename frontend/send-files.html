@@ -3,13 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>JAVIN FileShare — Transmit Console</title>
+  <title>JAVIN FileShare — Send Files</title>
   <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#020617" />
+  <meta name="theme-color" content="#0b1220" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="stylesheet" href="assets/css/main.css" />
-  <link rel="stylesheet" href="assets/css/pages/send.css" />
   <script>
     (function() {
       const t = localStorage.getItem('theme');
@@ -21,117 +20,87 @@
 </head>
 <body class="page-send">
   <div class="wrap">
-    
-    <!-- Page status alerts -->
     <div id="page-status" class="page-status is-hidden" role="status" aria-live="polite"></div>
 
-    <!-- Header Component -->
-    <div class="hdr anim1">
-      <span class="hdr-title">JAVIN FileShare</span>
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <button id="theme-toggle" type="button" title="Toggle Theme">☀️</button>
-        <span class="hdr-badge" style="color:#06b6d4; background:rgba(6,182,212,.14); border:1px solid rgba(6,182,212,.28)">↑ Sender</span>
+    <header class="app-header rise">
+      <a class="app-brand" href="/" style="text-decoration:none">
+        <span class="app-brand-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></span>
+        JAVIN FileShare
+      </a>
+      <div class="app-header-actions">
+        <button id="theme-toggle" type="button" title="Toggle theme" aria-label="Toggle theme"></button>
+        <span class="pill primary">Send</span>
+      </div>
+    </header>
+
+    <div class="rise" style="display:flex;align-items:center;gap:8px;font-size:var(--text-sm)">
+      <span class="muted">Session</span> <code id="sessionId" style="font-weight:600;color:var(--primary)"></code>
+      <span class="pill primary" id="devicesStatus">0 devices</span>
+    </div>
+
+    <div id="fileDropZone" class="drop-zone rise">
+      <svg class="icon icon-lg" style="color:var(--text-3)"><use href="assets/icons.svg#upload-cloud"/></svg>
+      <h3 style="margin:8px 0 0">Drop files here</h3>
+      <p class="muted" style="margin:4px 0 0;font-size:var(--text-sm)">or click to browse — any file type</p>
+      <button type="button" class="btn-secondary browse-btn" style="margin-top:12px">Browse files</button>
+      <input type="file" id="fileInput" multiple style="display:none" />
+    </div>
+
+    <div id="staged-section" class="is-hidden" style="display:flex;flex-direction:column;gap:16px">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Selected files</span>
+          <span class="pill primary" id="staged-count-badge">0 files</span>
+        </div>
+        <div id="selectedFiles" class="file-list"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border-subtle);padding-top:12px;margin-top:12px;font-size:var(--text-sm)">
+          <span class="muted">Ready to send</span>
+          <span id="staged-stats-text" class="muted">0 files · 0 B</span>
+        </div>
+      </div>
+      <button id="sendBtn" class="btn-primary btn-block" type="button">Send files</button>
+    </div>
+
+    <div id="response-timer" class="card card-warning is-hidden" style="text-align:center;padding:20px">
+      <div class="field-label" style="color:var(--warning)">Waiting for responses</div>
+      <div class="progress" style="margin:10px 0"><div class="progress-fill" id="timer-bar" style="width:100%"></div></div>
+      <div class="countdown" id="timer-count">30</div>
+      <p class="muted" style="font-size:var(--text-sm);margin:6px 0 14px"><span id="response-count">0</span> of <span id="total-receivers">0</span> ready</p>
+      <div style="display:flex;gap:10px">
+        <button type="button" id="extend-response-btn" class="btn-secondary" style="flex:1">Extend</button>
+        <button type="button" id="manual-proceed-btn" class="btn-primary" style="flex:1">Send now</button>
       </div>
     </div>
 
-    <!-- Session Chip -->
-    <div class="anim2" style="font-family: var(--font-mono); font-size: 0.8rem; display: flex; gap: 8px; align-items: center; padding: 2px 6px;">
-      <span style="color: var(--muted);">CONDUIT_ID:</span>
-      <code id="sessionId" style="color: var(--cyan); font-weight: 600;"></code>
-      <span class="pill cyan" id="devicesStatus">CONNECTED NODES: 0 ONLINE</span>
+    <div id="no-receivers-notification" class="card card-warning is-hidden" style="text-align:center;padding:20px">
+      <h3 style="margin:0 0 6px">No receivers connected</h3>
+      <p class="muted" style="margin:0 0 14px;font-size:var(--text-sm)">Connect a device before sending.</p>
+      <button type="button" id="back-btn-alt" class="btn-secondary btn-block">Back to session</button>
     </div>
 
-    <!-- State 1: Dropzone -->
-    <div class="drop-zone anim2" id="fileDropZone">
-      <div class="drop-icon-orb">📂</div>
-      <h3 style="font-family: var(--font-sans); font-size: 1.2rem; font-weight: 700; color: var(--text-primary);">Drop files here</h3>
-      <p style="font-family: var(--font-sans); font-size: 0.85rem; color: var(--sub);">or click to browse — any file type, any size</p>
-      <button type="button" class="browse-btn">Browse Files</button>
-      <input type="file" id="fileInput" class="file-input-hidden" multiple style="display: none;" />
-    </div>
-
-    <!-- State 2: Selected Files and Transmission Actions -->
-    <div id="staged-section" class="is-hidden">
-      <div class="card card-accent-cyan-indigo anim3">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-          <h3 style="font-family: var(--font-sans); font-size: 1.05rem; font-weight: 700; color: var(--text-primary);">Selected Files</h3>
-          <span class="pill cyan" id="staged-count-badge">0 FILES</span>
-        </div>
-        
-        <div id="selectedFiles" class="selected-files">
-          <!-- Populated dynamically by JS -->
-        </div>
-        
-        <div id="staged-summary" style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--sub); display: flex; justify-content: space-between; border-top: var(--border-glass); padding-top: 12px; margin-top: 12px;">
-          <span>CONDUIT READY</span>
-          <span id="staged-stats-text">FILES: 0 · SIZE: 0 B</span>
-        </div>
+    <div id="upload-section" class="card is-hidden">
+      <h3 id="upload-title" class="card-title" style="margin:0 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border-subtle)">Upload progress</h3>
+      <div id="upload-list" style="margin-bottom:14px"></div>
+      <div id="upload-stats" style="display:flex;flex-wrap:wrap;gap:12px"></div>
+      <div id="receiver-progress-section" class="is-hidden" style="margin-top:18px;border-top:1px solid var(--border-subtle);padding-top:14px">
+        <div class="field-label" style="margin-bottom:8px">Receivers</div>
+        <div id="peer-progress-list" style="display:flex;flex-direction:column;gap:10px"></div>
       </div>
+    </div>
 
-      <button id="sendBtn" class="btn-primary anim4" type="button" style="width: 100%;">
-        [ EXECUTE_TRANSMISSION ]
+    <div class="card log-console rise" style="padding:0;overflow:hidden">
+      <button type="button" class="log-console-header" id="toggle-console-btn" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:12px 16px">
+        <span class="field-label" style="margin:0">Activity log</span>
+        <span id="toggle-console-text" class="muted" style="font-size:var(--text-xs)">Show</span>
       </button>
-    </div>
-
-    <!-- State 3: Awaiting Receivers (Response Timer) -->
-    <div id="response-timer" class="card card-accent-amber anim3 is-hidden" style="text-align: center;">
-      <div class="timer-label" style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--amber); margin-bottom: 8px;">CLIENT RESPONSE WINDOW</div>
-      <div class="timer-track" style="height: 3px; background: rgba(245, 158, 11, 0.12); border-radius: 9999px; overflow: hidden; margin-bottom: 12px;">
-        <div class="timer-bar" id="timer-bar" style="height: 100%; width: 100%;"></div>
-      </div>
-      <div id="timer-count" style="font-family: var(--font-mono); font-size: 2.2rem; font-weight: 700; color: var(--amber);">30</div>
-      <div style="font-family: var(--font-sans); font-size: 0.85rem; color: var(--sub); margin-top: 6px; margin-bottom: 14px;">
-        <span id="response-count">0</span> of <span id="total-receivers">0</span> clients ready
-      </div>
-      <div class="timer-actions" style="display: flex; gap: 10px; justify-content: center;">
-        <button type="button" id="extend-response-btn" class="btn-secondary" style="flex: 1;">⏱ Extend</button>
-        <button type="button" id="manual-proceed-btn" class="btn-primary" style="flex: 1;">Go Now →</button>
+      <div id="console-body" class="log-console-body is-hidden" style="max-height:120px;overflow-y:auto;padding:12px 16px;font-family:var(--font-mono);font-size:var(--text-sm);line-height:1.5">
+        <div><span class="muted">[System]</span> Ready to send</div>
       </div>
     </div>
 
-    <!-- Alert: No Receivers -->
-    <div id="no-receivers-notification" class="card card-accent-amber anim3 is-hidden" style="text-align: center;">
-      <div class="timer-label" style="font-family: var(--font-mono); font-size: 0.9rem; color: var(--amber); margin-bottom: 6px;">NO ACTIVE RECEIVERS CONNECTED</div>
-      <p style="font-family: var(--font-sans); font-size: 0.8rem; color: var(--sub); margin-bottom: 14px;">Please connect a client node before initializing a stream.</p>
-      <button type="button" id="back-btn-alt" class="btn-secondary" style="width: 100%;">[ RETURN TO DASHBOARD ]</button>
+    <div style="display:flex;justify-content:center">
+      <button type="button" id="back-btn" class="btn-exit">Back to session</button>
     </div>
-
-    <!-- State 4 & 5: Upload Progress and Stats Section -->
-    <div id="upload-section" class="card card-accent-cyan-indigo anim3 is-hidden">
-      <h3 id="upload-title" style="font-family: var(--font-sans); font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; border-bottom: var(--border-glass); padding-bottom: 6px;">Upload Progress</h3>
-      <div id="upload-list" style="margin-bottom: 14px;">
-        <!-- Filled dynamically by JS -->
-      </div>
-      <div id="upload-stats">
-        <!-- Filled dynamically by JS as stat-item cells -->
-      </div>
-      <!-- Receiver Progress Section -->
-      <div id="receiver-progress-section" class="is-hidden" style="margin-top: 18px; border-top: var(--border-glass); padding-top: 14px;">
-        <div style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--sub); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">RECEIVER TRANSFERS</div>
-        <div id="peer-progress-list" style="display: flex; flex-direction: column; gap: 10px;">
-          <!-- Populated dynamically by JS -->
-        </div>
-      </div>
-    </div>
-
-    <!-- Collapsible Real-Time Activity Log Console -->
-    <div class="card anim4" style="padding: 0; position: relative; overflow: hidden;">
-      <div class="console-header" id="toggle-console-btn" style="padding: 12px 16px; border-bottom: var(--border-glass); display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
-        <span style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); font-weight: 600; letter-spacing: 1px;">CONSOLE LOGS</span>
-        <span id="toggle-console-text" style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--sub);">[ SHOW ]</span>
-      </div>
-      <div id="console-body" style="display: none; padding: 12px 16px; max-height: 120px; overflow-y: auto; font-family: var(--font-mono); font-size: 0.75rem; line-height: 1.5; color: var(--cyan);">
-        <div><span style="color: var(--muted);">[SYSTEM]</span> SENDER CONSOLE INITIATED</div>
-      </div>
-    </div>
-
-    <!-- Exit Session Panel -->
-    <div style="display: flex; justify-content: center; margin-top: 10px;">
-      <button type="button" id="back-btn" class="btn-exit">
-        [ EXIT SENDER ]
-      </button>
-    </div>
-
   </div>
 
   <script src="/socket.io/socket.io.js"></script>

@@ -98,17 +98,19 @@ document.addEventListener('DOMContentLoaded', () => {
   if (themeToggle) {
     const updateToggleIcon = () => {
       const isLight = document.documentElement.classList.contains('light-theme');
-      themeToggle.textContent = isLight ? '🌙' : '☀️';
+      themeToggle.innerHTML = isLight
+        ? '<svg class="icon"><use href="assets/icons.svg#moon"></use></svg>'
+        : '<svg class="icon"><use href="assets/icons.svg#sun"></use></svg>';
+      themeToggle.title = isLight ? 'Switch to dark mode' : 'Switch to light mode';
+      themeToggle.setAttribute('aria-label', themeToggle.title);
     };
     updateToggleIcon();
-
     themeToggle.addEventListener('click', () => {
       const isLight = document.documentElement.classList.toggle('light-theme');
       localStorage.setItem('theme', isLight ? 'light' : 'dark');
       updateToggleIcon();
     });
   }
-
   if (window.location.pathname.includes('pin')) {
     initPinPageSocket();
   }

@@ -151,33 +151,38 @@ export function showNotification(message, type = 'success', duration = 4500, opt
 
 export function showError(message) {
   const text = normalizeNotificationMessage(message) || 'An error occurred.';
-  const container = document.querySelector('.container');
-  if (container) {
-    const currentPath = window.location.pathname;
-    const sessionId = getUrlParameter('session');
-    const role = getUrlParameter('role');
-    const peerId = getUrlParameter('peerId');
+  document.querySelector('.error-overlay')?.remove();
 
-    let homeButton = '';
-    if (currentPath.includes('send-files.html') || currentPath.includes('receive-files.html')) {
-      homeButton = `<button onclick="window.location.href='/session.html?session=${sessionId}&role=${role}&peerId=${peerId}'" class="btn btn-primary">← Back to Main</button>`;
-    } else if (currentPath.includes('session.html')) {
-      homeButton = role === 'host'
-        ? `<button onclick="window.location.href='/?session=${sessionId}'" class="btn btn-primary">🏠 Go Home</button>`
-        : `<button onclick="window.close()" class="btn btn-primary">🚪 Close</button>`;
-    } else if (role === 'host') {
-      homeButton = `<button onclick="location.href='/'" class="btn btn-primary">🏠 Go Home</button>`;
-    }
+  const currentPath = window.location.pathname;
+  const sessionId = getUrlParameter('session');
+  const role = getUrlParameter('role');
+  const peerId = getUrlParameter('peerId');
 
-    container.innerHTML = `
-      <div class="error">
-        <h2>❌ Error</h2>
-        <p>${escapeHtml(text)}</p>
-        ${homeButton}
-        <button onclick="location.reload()" class="btn btn-secondary">🔄 Retry</button>
-      </div>
-    `;
-  } else {
-    alert('Error: ' + text);
+  let homeButton = '';
+  if (currentPath.includes('send-files.html') || currentPath.includes('receive-files.html')) {
+    homeButton = `<a class="btn btn-primary" href="/session.html?session=${sessionId}&role=${role}&peerId=${peerId}">Back to session</a>`;
+  } else if (currentPath.includes('session.html')) {
+    homeButton = role === 'host'
+      ? '<a class="btn btn-primary" href="/">Go home</a>'
+      : '<button class="btn btn-primary" type="button" onclick="window.close()">Close</button>';
+  } else if (role === 'host') {
+    homeButton = '<a class="btn btn-primary" href="/">Go home</a>';
   }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'error-overlay';
+  overlay.innerHTML = `
+    <div class="error-card" role="alertdialog" aria-modal="true">
+      <div class="modal-icon danger" aria-hidden="true">
+        <svg class="icon icon-lg"><use href="/assets/icons.svg#alert-circle"></use></svg>
+      </div>
+      <h2 class="modal-title">Something went wrong</h2>
+      <p class="modal-text">${escapeHtml(text)}</p>
+      <div class="dialog-actions">
+        ${homeButton}
+        <button class="btn btn-secondary" type="button" onclick="location.reload()">Retry</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
 }

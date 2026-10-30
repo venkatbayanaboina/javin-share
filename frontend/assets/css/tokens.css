@@ -1,57 +1,172 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+/* ============================================================
+   JAVIN FileShare — Design Tokens (single source of truth)
+   Themes: :root = dark · html.light-theme = light
+   Mechanism unchanged: html.light-theme class toggled by
+   existing inline script + #theme-toggle handler.
+   ============================================================ */
 
 :root {
-  /* Tech-Noir Premium Slates */
-  --color-bg-canvas: #020617;
-  
-  /* Brand Indicators - Clean, Functional */
-  --color-brand-primary: #06b6d4;    /* Tech Cyan */
-  --color-brand-accent: #6366f1;     /* Indigo Accent */
-  --color-brand-success: #10b981;    /* Emerald Confirm */
-  --color-brand-danger: #ef4444;     /* Warning Red */
-  --color-brand-warning: #f59e0b;    /* Warning Amber */
+  color-scheme: dark;
 
-  /* NOC Surfaces */
-  --color-surface-glass: rgba(13, 18, 30, 0.8);
-  --color-surface-card: rgba(15, 23, 42, 0.9);
-  --color-surface-muted: rgba(255, 255, 255, 0.04);
-  --color-surface-panel: rgba(255, 255, 255, 0.02);
+  /* ── Canvas & surfaces ── */
+  --bg:               #0b1220;
+  --bg-accent:        radial-gradient(1200px 600px at 50% -10%, rgba(59, 130, 246, 0.07), transparent 60%);
+  --surface:          #111a2c;
+  --surface-2:        #16203a;
+  --surface-inset:    rgba(255, 255, 255, 0.04);
+  --overlay:          rgba(4, 9, 20, 0.66);
 
-  /* Typography Colors */
-  --color-text-primary: #f1f5f9;
-  --color-text-secondary: #94a3b8;
-  --color-text-muted: #475569;
-  --color-text-on-dark: #ffffff;
-  
-  /* Inputs */
-  --color-input-bg: rgba(0, 0, 0, 0.4);
-  --color-input-border: rgba(255, 255, 255, 0.08);
-  --color-input-focus: rgba(6, 182, 212, 0.4);
+  /* ── Borders ── */
+  --border:           rgba(148, 163, 184, 0.16);
+  --border-strong:    rgba(148, 163, 184, 0.30);
+  --border-subtle:    rgba(148, 163, 184, 0.10);
 
-  /* Solid NOC Borders & Radii */
-  --border-thin: 1px solid rgba(255, 255, 255, 0.08);
-  --border-thick: 1px solid rgba(255, 255, 255, 0.15);
-  --radius-sm: 4px;
-  --radius-md: 4px;
-  --radius-lg: 6px;
-  
-  /* Shadows - Minimal box shadow, no neon glows */
-  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 0 transparent;
-  --shadow-header: 0 2px 8px rgba(0, 0, 0, 0.4);
+  /* ── Text ── */
+  --text-1:           #f1f5f9;
+  --text-2:           #a3b0c2;
+  --text-3:           #64748b;
 
-  /* NOC Typography */
-  --font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-family-mono: 'JetBrains Mono', monospace;
-  --font-size-base: 14px;
-  --font-size-lg: 18px;
-  --font-size-sm: 12px;
+  /* ── Brand & semantic ── */
+  --primary:          #3b82f6;
+  --primary-strong:   #2563eb;
+  --primary-contrast: #ffffff;
+  --primary-soft:     rgba(59, 130, 246, 0.14);
+  --primary-border:   rgba(59, 130, 246, 0.38);
 
-  /* Spacing */
-  --space-xs: 8px;
-  --space-sm: 12px;
-  --space-md: 16px;
-  --space-lg: 20px;
-  --space-xl: 24px;
-  --space-2xl: 36px;
+  --success:          #34d399;
+  --success-strong:   #10b981;
+  --success-soft:     rgba(52, 211, 153, 0.13);
+  --success-border:   rgba(52, 211, 153, 0.35);
+
+  --warning:          #fbbf24;
+  --warning-strong:   #d97706;
+  --warning-soft:     rgba(251, 191, 36, 0.12);
+  --warning-border:   rgba(251, 191, 36, 0.35);
+
+  --danger:           #f87171;
+  --danger-strong:    #ef4444;
+  --danger-soft:      rgba(248, 113, 113, 0.12);
+  --danger-border:    rgba(248, 113, 113, 0.35);
+
+  --ring:             rgba(59, 130, 246, 0.45);
+
+  /* ── Inputs ── */
+  --input-bg:         rgba(255, 255, 255, 0.05);
+  --input-border:     rgba(148, 163, 184, 0.22);
+  --input-text:       var(--text-1);
+  --input-placeholder:#5b6b81;
+
+  /* ── Elevation ── */
+  --shadow-sm:        0 1px 2px rgba(0, 0, 0, 0.24);
+  --shadow-md:        0 4px 16px rgba(0, 0, 0, 0.32);
+  --shadow-lg:        0 16px 48px rgba(0, 0, 0, 0.44);
+
+  /* ── Typography ── */
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+
+  --text-xs:   0.75rem;    /* 12px */
+  --text-sm:   0.8125rem;  /* 13px */
+  --text-base: 0.9375rem;  /* 15px */
+  --text-md:   1rem;       /* 16px */
+  --text-lg:   1.125rem;   /* 18px */
+  --text-xl:   1.375rem;   /* 22px */
+  --text-2xl:  1.75rem;    /* 28px */
+
+  /* ── Spacing (4px scale) ── */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* ── Radius & motion ── */
+  --radius-sm:   8px;
+  --radius:      12px;
+  --radius-lg:   16px;
+  --radius-full: 999px;
+
+  --transition:      160ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 320ms cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* ── Layout ── */
+  --wrap-width:      1040px;
+  --wrap-narrow:     520px;
+
+  /* ── Compatibility aliases (JS/inline remnants safe-guard) ── */
+  --text-primary:   var(--text-1);
+  --text-secondary: var(--text-2);
+  --text-muted:     var(--text-3);
+  --color-text-primary: var(--text-1);
+  --color-text-secondary: var(--text-2);
+  --color-text-muted: var(--text-3);
+  --color-brand-primary: var(--primary);
+  --color-brand-success: var(--success);
+  --color-brand-warning: var(--warning);
+  --color-brand-danger: var(--danger);
+  --color-indigo: var(--primary);
+  --color-emerald: var(--success);
+  --color-amber: var(--warning);
+  --color-cyan: var(--primary);
+}
+
+html.light-theme {
+  color-scheme: light;
+
+  /* ── Canvas & surfaces ── */
+  --bg:               #f4f6fb;
+  --bg-accent:        radial-gradient(1200px 600px at 50% -10%, rgba(59, 130, 246, 0.06), transparent 60%);
+  --surface:          #ffffff;
+  --surface-2:        #f8fafc;
+  --surface-inset:    rgba(15, 23, 42, 0.04);
+  --overlay:          rgba(15, 23, 42, 0.42);
+
+  /* ── Borders ── */
+  --border:           rgba(15, 23, 42, 0.10);
+  --border-strong:    rgba(15, 23, 42, 0.18);
+  --border-subtle:    rgba(15, 23, 42, 0.06);
+
+  /* ── Text ── */
+  --text-1:           #0f172a;
+  --text-2:           #475569;
+  --text-3:           #94a3b8;
+
+  /* ── Brand & semantic ── */
+  --primary:          #2563eb;
+  --primary-strong:   #1d4ed8;
+  --primary-contrast: #ffffff;
+  --primary-soft:     rgba(37, 99, 235, 0.09);
+  --primary-border:   rgba(37, 99, 235, 0.32);
+
+  --success:          #059669;
+  --success-strong:   #047857;
+  --success-soft:     rgba(5, 150, 105, 0.09);
+  --success-border:   rgba(5, 150, 105, 0.30);
+
+  --warning:          #b45309;
+  --warning-strong:   #92400e;
+  --warning-soft:     rgba(217, 119, 6, 0.10);
+  --warning-border:   rgba(217, 119, 6, 0.30);
+
+  --danger:           #dc2626;
+  --danger-strong:    #b91c1c;
+  --danger-soft:      rgba(220, 38, 38, 0.08);
+  --danger-border:    rgba(220, 38, 38, 0.28);
+
+  --ring:             rgba(37, 99, 235, 0.35);
+
+  /* ── Inputs ── */
+  --input-bg:         #ffffff;
+  --input-border:     rgba(15, 23, 42, 0.16);
+  --input-text:       var(--text-1);
+  --input-placeholder:#94a3b8;
+
+  /* ── Elevation ── */
+  --shadow-sm:        0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-md:        0 4px 16px rgba(15, 23, 42, 0.07);
+  --shadow-lg:        0 16px 48px rgba(15, 23, 42, 0.12);
 }

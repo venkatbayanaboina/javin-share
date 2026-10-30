@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>FileShare - Audit Logs</title>
+  <title>JAVIN FileShare — History</title>
   <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#020617" />
+  <meta name="theme-color" content="#0b1220" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="stylesheet" href="assets/css/main.css" />
@@ -18,46 +18,37 @@
     })();
   </script>
 </head>
-<body class="page-history-audit">
-  <div class="container" style="max-width: 800px; margin: 40px auto;">
-    <header class="page-header" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: var(--border-thin); padding-bottom: 12px;">
+<body class="page-history">
+  <div class="wrap" style="max-width:800px">
+    <header class="app-header rise">
       <div>
-        <h1 class="brand-name" style="font-size: 1.5rem; color: var(--color-text-on-dark);">AUDIT LOGS</h1>
-        <p class="brand-tagline" style="font-size: 0.85rem; color: var(--color-text-muted);">JAVIN network transmission history</p>
+        <h1 style="margin:0;font-size:var(--text-lg)">Transfer history</h1>
+        <p class="muted" style="margin:4px 0 0;font-size:var(--text-sm)">All files sent and received in this session</p>
       </div>
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <button id="theme-toggle" type="button" title="Toggle Theme">☀️</button>
-        <button id="back-btn" class="btn btn-secondary" style="border-radius: var(--radius-sm); font-family: var(--font-family-mono); font-size: 0.8rem;" type="button">
-          [ RETURN_TO_CONSOLE ]
-        </button>
+      <div class="app-header-actions">
+        <button id="theme-toggle" type="button" title="Toggle theme" aria-label="Toggle theme"></button>
+        <button id="back-btn" class="btn-secondary" type="button"><svg class="icon" style="width:14px;height:14px"><use href="assets/icons.svg#arrow-left"/></svg> Back</button>
       </div>
     </header>
 
-    <div class="history-card" style="background: var(--color-surface-panel); border: var(--border-thin); border-radius: var(--radius-md); padding: 24px;">
-      <div style="font-family: var(--font-family-mono); font-size: 0.75rem; color: var(--color-text-muted); letter-spacing: 1px; margin-bottom: 16px; border-bottom: var(--border-thin); padding-bottom: 8px; display: flex; justify-content: space-between;">
-        <span>TRANSMISSION RECORD</span>
-        <span id="record-count">0 ENTRIES</span>
+    <div class="card rise">
+      <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+        <span class="card-title">Transfers</span>
+        <span class="pill" id="record-count">0</span>
       </div>
-
-      <!-- Audit Log Console Table -->
-      <div class="terminal-table-container" style="overflow-x: auto; width: 100%;">
-        <table style="width: 100%; border-collapse: collapse; text-align: left; font-family: var(--font-family-mono); font-size: 0.85rem; color: var(--color-text-primary);">
+      <div class="table-container" style="overflow-x:auto">
+        <table class="table">
           <thead>
-            <tr style="border-bottom: var(--border-thin); color: var(--color-text-muted);">
-              <th style="padding: 10px 8px; font-weight: 500;">TIMESTAMP</th>
-              <th style="padding: 10px 8px; font-weight: 500;">DIRECTION</th>
-              <th style="padding: 10px 8px; font-weight: 500;">FILE NAME</th>
-              <th style="padding: 10px 8px; font-weight: 500; text-align: right;">SIZE</th>
-              <th style="padding: 10px 8px; font-weight: 500; text-align: right;">STATUS</th>
+            <tr>
+              <th>Time</th>
+              <th>Direction</th>
+              <th>File</th>
+              <th class="num">Size</th>
+              <th>Status</th>
             </tr>
           </thead>
           <tbody id="audit-logs-body">
-            <!-- Dynamically populated rows -->
-            <tr>
-              <td colspan="5" style="text-align: center; padding: 40px 0; color: var(--color-text-muted); font-style: italic;">
-                NO TRANSMISSION RECORDS FOUND
-              </td>
-            </tr>
+            <tr><td colspan="5" class="table-empty">No transfers yet.</td></tr>
           </tbody>
         </table>
       </div>

@@ -189,10 +189,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('deviceName').textContent = deviceName;
   const deviceInfo = getDeviceInfo();
-  const osIcon = deviceInfo.os === 'macos' ? '🍎' : deviceInfo.os === 'windows' ? '🪟' : deviceInfo.os === 'linux' ? '🐧' : deviceInfo.os === 'android' ? '🤖' : deviceInfo.os === 'ios' ? '📱' : '💻';
-  const typeIcon = deviceInfo.deviceType === 'mobile' ? '📱' : deviceInfo.deviceType === 'tablet' ? '📲' : '🖥️';
+  const osIcon = deviceInfo.os === 'macos' ? '🍎' : deviceInfo.os === 'windows' ? '🪟' : deviceInfo.os === 'linux' ? '🐧' : deviceInfo.os === 'android' ? '🤖' : deviceInfo.os === 'ios' ? '' : '💻';
+  const typeIcon = deviceInfo.deviceType === 'mobile' ? '' : deviceInfo.deviceType === 'tablet' ? '📲' : '';
   document.getElementById('deviceInfo').textContent = `${typeIcon} ${osIcon} ${deviceInfo.os.toUpperCase()}`;
-  document.getElementById('userRole').textContent = role === 'host' ? '🏠 HOST NODE' : '💻 CLIENT NODE';
+  document.getElementById('userRole').textContent = role === 'host' ? 'Host' : 'Client';
 
   try {
     clearSessionExited(sessionId);
@@ -215,15 +215,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!consoleBody) return;
     const time = new Date().toTimeString().split(' ')[0];
     const colorMap = {
-      info: 'var(--color-brand-primary)',
-      success: 'var(--color-brand-success)',
-      warning: 'var(--color-brand-warning)',
-      error: 'var(--color-brand-danger)'
+      info: 'var(--primary)',
+      success: 'var(--success)',
+      warning: 'var(--warning)',
+      error: 'var(--danger)'
     };
-    const color = colorMap[type] || 'var(--color-text-primary)';
+    const color = colorMap[type] || 'var(--text-1)';
     const logRow = document.createElement('div');
     logRow.style.color = color;
-    logRow.innerHTML = `<span style="color: var(--color-text-muted);">[${time}]</span> ${escapeHtml(message)}`;
+    logRow.innerHTML = `<span style="color: var(--text-3);">[${time}]</span> ${escapeHtml(message)}`;
     consoleBody.appendChild(logRow);
     consoleBody.scrollTop = consoleBody.scrollHeight;
   }
@@ -291,7 +291,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       
       const statusSpan = document.getElementById('devicesStatus').querySelector('span');
       if (statusSpan) {
-        statusSpan.textContent = `${totalDevices} NODE(S) [${otherDeviceCount} REMOTE]`;
+        statusSpan.textContent = `${totalDevices} connected`;
       }
       
       // Update ASCII map
@@ -302,9 +302,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const wasActive = previousPeers.some(prev => prev.peerId === p.peerId && !prev.isDisconnected);
         const isActive = !p.isDisconnected;
         if (isActive && !wasActive) {
-          logToConsole(`NODE_JOINED: ${p.deviceName || 'Unknown'} [${p.role.toUpperCase()}]`, 'success');
+          logToConsole(`Joined: ${p.deviceName || 'Unknown'} [${p.role.toUpperCase()}]`, 'success');
         } else if (!isActive && wasActive) {
-          logToConsole(`NODE_LEFT: ${p.deviceName || 'Unknown'}`, 'warning');
+          logToConsole(`Left: ${p.deviceName || 'Unknown'}`, 'warning');
         }
       });
       previousPeers = peers;
@@ -433,7 +433,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     mainSocket.on('send-button-locked', (data) => {
-      logToConsole(`TRANSMISSION LOCK ENGAGED BY ${data.lockedBy || 'ANOTHER NODE'}`, 'warning');
+      logToConsole(`Transfer locked by ${data.lockedBy || 'ANOTHER NODE'}`, 'warning');
       const sendButton = document.getElementById('sendBtn');
       if (sendButton) {
         sendButton.disabled = true;
@@ -460,7 +460,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     mainSocket.on('host-navigation-blocked', (data) => {
-      logToConsole('HOST NAVIGATION BLOCKED: ACTIVE CONDUITS EXIST', 'error');
+      logToConsole('You can’t leave while a transfer is active', 'error');
       showNotification(data.message || 'Navigation blocked while others are connected.', 'warning');
       const navBlockedIndicator = document.getElementById('hostNavigationBlocked');
       if (navBlockedIndicator) {
@@ -473,7 +473,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     mainSocket.on('host-navigation-allowed', (data) => {
-      logToConsole('HOST NAVIGATION ALLOWED: CONDUITS DISSOLVED', 'success');
+      logToConsole('You can now leave', 'success');
       showNotification(data.message || 'All peers disconnected. You can leave now.', 'info');
       const navBlockedIndicator = document.getElementById('hostNavigationBlocked');
       if (navBlockedIndicator) {
@@ -553,7 +553,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     mainSocket.on('session-invalidated', (data) => {
-      logToConsole('SESSION KEY REFRESHED / INVALIDATED', 'error');
+      logToConsole('Session updated', 'error');
       alert('Session has been invalidated. The host created a new one.');
       window.location.href = role === 'host' ? '/' : `/session-ended.html?session=${sessionId}&role=${role}`;
     });

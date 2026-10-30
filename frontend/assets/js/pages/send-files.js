@@ -162,15 +162,15 @@ function logToConsole(message, type = 'info') {
   if (!consoleBody) return;
   const time = new Date().toTimeString().split(' ')[0];
   const colorMap = {
-    info: 'var(--color-brand-primary)',
-    success: 'var(--color-brand-success)',
-    warning: 'var(--color-brand-warning)',
-    error: 'var(--color-brand-danger)'
+    info: 'var(--primary)',
+    success: 'var(--success)',
+    warning: 'var(--warning)',
+    error: 'var(--danger)'
   };
-  const color = colorMap[type] || 'var(--color-text-primary)';
+  const color = colorMap[type] || 'var(--text-1)';
   const logRow = document.createElement('div');
   logRow.style.color = color;
-  logRow.innerHTML = `<span style="color: var(--color-text-muted);">[${time}]</span> ${escapeHtml(message)}`;
+  logRow.innerHTML = `<span style="color: var(--text-3);">[${time}]</span> ${escapeHtml(message)}`;
   consoleBody.appendChild(logRow);
   consoleBody.scrollTop = consoleBody.scrollHeight;
 }
@@ -227,16 +227,16 @@ function updateSendButtonState() {
 
   if (isRequesting) {
     sendBtn.disabled = true;
-    sendBtn.textContent = '[ ACQUIRING CONDUIT LOCK... ]';
+    sendBtn.textContent = 'Preparing…';
   } else if (receiversCount === 0) {
     sendBtn.disabled = true;
-    sendBtn.textContent = '[ NO RECEIVERS DETECTED ]';
+    sendBtn.textContent = 'No receivers connected';
   } else if (!selectedFile) {
     sendBtn.disabled = true;
-    sendBtn.textContent = '[ SELECT A FILE TO SEND ]';
+    sendBtn.textContent = 'Select a file to send';
   } else {
     sendBtn.disabled = false;
-    sendBtn.textContent = '[ EXECUTE_TRANSMISSION ]';
+    sendBtn.textContent = 'Send files';
   }
 }
 
@@ -277,7 +277,7 @@ function setupSocket() {
       knownPeers.set(p.peerId, p.deviceName || 'Client Node');
     });
 
-    document.getElementById("devicesStatus").textContent = `CONNECTED NODES: ${receiversCount} ONLINE`;
+    document.getElementById("devicesStatus").textContent = `${receiversCount} connected`;
     
     updateSendButtonState();
     
@@ -328,7 +328,7 @@ function setupSocket() {
       
       const manualBtn = document.getElementById('manual-proceed-btn');
       manualBtn.onclick = () => {
-        logToConsole('FORCE EXECUTE CONDUIT VIA OVERRIDE', 'warning');
+        logToConsole('Sending now', 'warning');
         try { sendSocket.emit('manual-proceed', { sessionId, fileId, senderId: peerId }); } catch (_) {}
       };
     }
@@ -338,7 +338,7 @@ function setupSocket() {
     if (fileId === currentFileId) {
       document.getElementById("response-count").textContent = totalResponses;
       document.getElementById("total-receivers").textContent = totalReceivers;
-      logToConsole(`PEER CONDUIT UPDATE: ${totalResponses} / ${totalReceivers} RESPONDED`, 'info');
+      logToConsole(`Responses: ${totalResponses} / ${totalReceivers} RESPONDED`, 'info');
       
       if (totalResponses >= totalReceivers) {
         clearInterval(window.responseCountdown);
@@ -376,7 +376,7 @@ function setupSocket() {
 
   sendSocket.on('receiver-rejected', ({ fileId, receiverPeerId }) => {
     if (fileId !== currentFileId) return;
-    logToConsole(`PEER DECLINED CONDUIT OFFER`, 'warning');
+    logToConsole(`Peer declined`, 'warning');
   });
 
   sendSocket.on('all-rejected', ({ fileId }) => {
@@ -417,7 +417,7 @@ function setupSocket() {
         html += `
           <div style="display: flex; flex-direction: column; gap: 4px;">
             <div style="display: flex; justify-content: space-between; font-size: 0.78rem; font-family: var(--font-mono);">
-              <span style="color: var(--text-primary); font-weight: 500;">🖥️ ${escapeHtml(pName)}</span>
+              <span style="color: var(--text-primary); font-weight: 500;">${escapeHtml(pName)}</span>
               <span style="color: var(--cyan); font-weight: 600;">${state.percent}%</span>
             </div>
             <div style="height: 4px; background: rgba(0, 0, 0, 0.08); border-radius: 999px; overflow: hidden;">
@@ -452,7 +452,7 @@ function setupSocket() {
   });
 
   sendSocket.on('session-invalidated', (data) => {
-    logToConsole('SESSION KEY REFRESHED / INVALIDATED', 'error');
+    logToConsole('Session updated', 'error');
     alert('Session has been invalidated. The host created a new one.');
     window.location.href = role === 'host' ? '/' : `/session-ended.html?session=${sessionId}&role=${role}`;
   });
@@ -562,7 +562,7 @@ function requestToSendFile() {
   isRequesting = true;
   updateSendButtonState();
   
-  logToConsole(`OFFERING FILE CONDUIT: ${selectedFile.name} (${formatFileSize(selectedFile.size)})`, 'info');
+  logToConsole(`Sending file: ${selectedFile.name} (${formatFileSize(selectedFile.size)})`, 'info');
   
   sendSocket.emit("request-send-lock", { sessionId, senderId: peerId }, (response) => {
     if (response.ok) {

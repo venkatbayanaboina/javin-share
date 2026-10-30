@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>JAVIN FileShare — Host Panel</title>
+  <title>JAVIN FileShare — Host</title>
   <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#020617" />
+  <meta name="theme-color" content="#0b1220" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="stylesheet" href="assets/css/main.css" />
@@ -20,151 +20,110 @@
 </head>
 <body class="page-host">
   <div class="wrap">
-    
-    <!-- Page status alerts -->
     <div id="page-status" class="page-status is-hidden" role="status" aria-live="polite"></div>
- 
-    <!-- Header Component -->
-    <div class="hdr anim1">
-      <span class="hdr-title">JAVIN FileShare</span>
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <button id="theme-toggle" type="button" title="Toggle Theme">☀️</button>
-        <span class="hdr-badge" style="color: var(--indigo); background: rgba(99,102,241,.14); border: 1px solid rgba(99,102,241,.28)">⬡ Host</span>
+
+    <header class="app-header rise">
+      <a class="app-brand" href="/" style="text-decoration:none">
+        <span class="app-brand-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></span>
+        JAVIN FileShare
+      </a>
+      <div class="app-header-actions">
+        <button id="theme-toggle" type="button" title="Toggle theme" aria-label="Toggle theme"></button>
+        <span class="pill primary">Host</span>
       </div>
+    </header>
+
+    <div id="loading" class="card rise" style="text-align:center;padding:40px 24px">
+      <p class="muted" style="margin:0">Preparing your session…</p>
     </div>
 
-    <!-- Loading State -->
-    <div id="loading" class="card anim2" style="text-align: center; padding: 40px 0;">
-      <p style="font-family: var(--font-mono); color: var(--indigo);">INITIALIZING SYSTEM...</p>
+    <div id="device-name-section" class="card rise is-hidden" style="max-width:460px;margin:32px auto;text-align:center;display:flex;flex-direction:column;gap:16px;align-items:center;padding:28px 24px">
+      <span class="app-brand-icon" style="width:48px;height:48px;border-radius:50%"><svg class="icon" style="width:22px;height:22px"><use href="assets/icons.svg#monitor"/></svg></span>
+      <div>
+        <h2 style="margin:0">Set your device name</h2>
+        <p class="muted" style="margin:6px 0 0">This name will be visible to others in the session</p>
+      </div>
+      <input type="text" id="device-name-input" placeholder="e.g. My MacBook" maxlength="30" required style="width:100%" />
+      <button id="continue-btn" class="btn-primary btn-block" type="button">Continue</button>
     </div>
 
-    <!-- Block 1: Device Name Input Card -->
-    <div id="device-name-section" class="card card-accent-indigo-cyan anim2 is-hidden" style="max-width: 460px; margin: 40px auto; text-align: center;">
-      <div style="font-size: 1.6rem; width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(99,102,241,.14); border: 1px solid rgba(99,102,241,.35); box-shadow: 0 0 20px rgba(99,102,241,.28); animation: orb-pulse 2.6s ease-in-out infinite;">🖥️</div>
-      <h2 style="font-family: var(--font-sans); font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">Set Your Device Name</h2>
-      <p style="font-family: var(--font-sans); font-size: 0.85rem; color: var(--sub);">This name will be visible to connecting clients</p>
-      <input type="text" id="device-name-input" placeholder="e.g. DESKTOP-MAIN" maxlength="30" required style="margin-top: 8px;" />
-      <button id="continue-btn" class="btn-primary" style="width: 100%;" type="button">Start Session →</button>
-    </div>
-
-    <!-- Main Host Dashboard -->
-    <div id="host-section" class="is-hidden">
-      
-      <!-- Block 2: Top Bar — Current Device Name -->
-      <div class="device-bar anim2">
-        <div class="device-name-lbl">🖥️ <span class="current-device-name-txt">DESKTOP-MAIN</span></div>
-        <span class="pill info">⬡ Host Session</span>
+    <div id="host-section" class="is-hidden" style="display:flex;flex-direction:column;gap:20px">
+      <div class="card rise" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px">
+        <span style="display:inline-flex;align-items:center;gap:8px;font-weight:600"><svg class="icon" style="color:var(--text-3)"><use href="assets/icons.svg#monitor"/></svg> <span class="current-device-name-txt">—</span></span>
+        <span class="pill primary">Host session</span>
       </div>
 
-      <!-- State 2: NEW NODE DETECTED Banner -->
-      <div id="new-node-banner" class="is-hidden" style="background: rgba(16, 185, 129, 0.08); border: 1px solid var(--emerald); border-radius: 12px; padding: 12px; font-family: var(--font-mono); font-size: 0.85rem; color: var(--emerald); display: flex; align-items: center; gap: 8px; animation: fadeup .3s ease-both;">
-        <span>🟢 NEW NODE DETECTED:</span>
-        <span id="new-node-name" style="font-weight: 600; color: var(--text-primary);"></span>
+      <div id="new-node-banner" class="banner banner-success is-hidden" style="gap:8px">
+        <svg class="icon" style="width:16px;height:16px"><use href="assets/icons.svg#check-circle"/></svg>
+        <span>New device joined:</span> <strong id="new-node-name"></strong>
       </div>
 
-      <!-- Grid Layout -->
-      <div class="host-terminal-grid">
-        
-        <!-- Left Column: QR & PIN Cards -->
-        <div id="qr-block" class="anim3" style="display: flex; flex-direction: column; gap: 16px;">
-          
-          <!-- Block 3: QR Code Card -->
-          <div class="card card-accent-indigo-cyan qr-card">
-            <div class="qr-scan-lbl">SCAN TO JOIN</div>
-            <div class="qr-block">
-              <img id="qr-code" alt="QR Code" style="width: 160px; height: 160px; display: block;" />
-            </div>
-            <div style="font-size: 0.82rem; color: var(--sub);">Or enter URL manually below</div>
-            
-            <!-- Block 4: Connection URLs -->
-            <div style="display: flex; flex-direction: column; gap: 8px; width: 100%; margin-top: 8px;">
-              
-              <!-- IP Address URL row -->
-              <div style="display: flex; gap: 8px; align-items: center;">
-                <div style="font-family: var(--font-mono); font-size: 0.62rem; color: var(--cyan); letter-spacing: 0.1em; min-width: 28px; text-align: center; background: rgba(6,182,212,.10); border: 1px solid rgba(6,182,212,.22); border-radius: 5px; padding: 2px 5px; flex-shrink: 0;">IP</div>
-                <div style="flex: 1; font-family: var(--font-mono); font-size: 0.76rem; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06); border-radius: 10px; padding: 10px 14px; color: var(--cyan); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                  <span id="connection-url">http://...</span>
-                </div>
-                <button id="copy-url-btn" type="button" title="Copy IP URL" style="width: 34px; height: 34px; flex-shrink: 0; border-radius: 8px; background: rgba(6,182,212,.12); border: 1px solid rgba(6,182,212,.25); color: var(--cyan); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .2s; outline: none;">📋</button>
+      <div class="host-terminal-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div id="qr-block" class="rise" style="display:flex;flex-direction:column;gap:16px">
+          <div class="card" style="display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding:20px">
+            <span class="field-label">Scan to join</span>
+            <div class="qr-frame"><img id="qr-code" alt="QR code to join session" style="width:160px;height:160px;display:block" /></div>
+            <span class="muted" style="font-size:var(--text-sm)">Or share the link below</span>
+            <div style="display:flex;flex-direction:column;gap:8px;width:100%;margin-top:4px">
+              <div class="url-row">
+                <span class="url-chip">IP</span>
+                <span class="url-value" id="connection-url">http://…</span>
+                <button id="copy-url-btn" type="button" class="icon-btn" title="Copy link" aria-label="Copy link"><svg class="icon"><use href="assets/icons.svg#copy"/></svg></button>
               </div>
-
-              <!-- .local mDNS URL row (hidden until server provides it) -->
-              <div id="local-url-row" style="display: none; gap: 8px; align-items: center;">
-                <div style="font-family: var(--font-mono); font-size: 0.62rem; color: #a78bfa; letter-spacing: 0.1em; min-width: 28px; text-align: center; background: rgba(139,92,246,.10); border: 1px solid rgba(139,92,246,.22); border-radius: 5px; padding: 2px 5px; flex-shrink: 0;">.local</div>
-                <div style="flex: 1; font-family: var(--font-mono); font-size: 0.76rem; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06); border-radius: 10px; padding: 10px 14px; color: #a78bfa; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                  <span id="connection-local-url">—</span>
-                </div>
-                <button id="copy-local-url-btn" type="button" title="Copy .local URL" style="width: 34px; height: 34px; flex-shrink: 0; border-radius: 8px; background: rgba(139,92,246,.12); border: 1px solid rgba(139,92,246,.25); color: #a78bfa; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .2s; outline: none;">📋</button>
+              <div id="local-url-row" class="url-row" style="display:none">
+                <span class="url-chip">.local</span>
+                <span class="url-value" id="connection-local-url">—</span>
+                <button id="copy-local-url-btn" type="button" class="icon-btn" title="Copy .local link" aria-label="Copy .local link"><svg class="icon"><use href="assets/icons.svg#copy"/></svg></button>
               </div>
-
             </div>
           </div>
 
-          <!-- Block 5: Session PIN Card -->
-          <div class="card card-accent-amber pin-card" style="display: flex; flex-direction: column; justify-content: space-between; gap: 14px;">
-            <div>
-              <div style="font-family: var(--font-mono); font-size: 0.60rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--amber);">SESSION PIN</div>
-              <div class="pin-val" id="session-pin">000 · 000</div>
-            </div>
-            
-            <div style="border-top: var(--border-glass); padding-top: 12px; display: flex; flex-direction: column; gap: 8px;">
-              <div style="font-family: var(--font-mono); font-size: 0.60rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--sub);">Expires in</div>
-              <div id="pin-timer" style="font-family: var(--font-mono); font-size: 1.8rem; color: var(--amber); font-weight: 600;">--:--</div>
+          <div class="card" style="display:flex;flex-direction:column;gap:12px;padding:20px">
+            <span class="field-label">Session PIN</span>
+            <div class="pin-display" id="session-pin">000 · 000</div>
+            <div class="card-inset" style="display:flex;flex-direction:column;gap:4px;text-align:center">
+              <span class="field-label" style="margin:0">Expires in</span>
+              <span id="pin-timer" class="countdown">--:--</span>
             </div>
           </div>
         </div>
 
-        <!-- Right Column: Connected Devices & Overrides (State 2) -->
-        <div id="status-panel" class="card card-accent-emerald-cyan anim4 is-hidden" style="display: flex; flex-direction: column; justify-content: space-between; gap: 16px;">
+        <div id="status-panel" class="card is-hidden rise" style="display:flex;flex-direction:column;gap:16px">
+          <div class="card-header">
+            <span class="card-title">Connected devices</span>
+          </div>
+          <div id="connection-status" class="is-hidden"></div>
+          <ul id="connected-nodes-list" class="device-list">
+            <li class="device-empty">No devices connected yet</li>
+          </ul>
+          <div id="grace-controls" class="is-hidden" style="border-top:1px solid var(--border-subtle);padding-top:16px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center">
+            <span class="field-label" style="color:var(--warning)">Ready to start</span>
+            <div id="grace-countdown" class="countdown" style="font-size:2.2rem">00:30</div>
+            <p class="muted" style="font-size:var(--text-sm);margin:0">A device has joined. Session will start automatically.</p>
+            <div class="override-actions" style="display:flex;gap:10px;width:100%;margin-top:4px">
+              <button id="go-now-btn" class="btn-primary" style="flex:1" type="button">Start now</button>
+              <button id="extend-btn" class="btn-secondary" style="flex:1" type="button">Extend 30s</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="lock-panel" class="card card-warning is-hidden rise" style="display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;min-height:220px;justify-content:center">
+          <svg class="icon icon-lg" style="color:var(--warning)"><use href="assets/icons.svg#lock"/></svg>
           <div>
-            <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--sub); letter-spacing: 0.12em; text-transform: uppercase; border-bottom: var(--border-glass); padding-bottom: 6px; margin-bottom: 12px;">CONNECTED NODES</div>
-            <!-- Connection status updates -->
-            <div id="connection-status" class="connection-status status-waiting" style="display: none;"></div>
-            
-            <ul id="connected-nodes-list" style="list-style: none; font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-primary);">
-              <li style="color: var(--muted);">NO NODES CONNECTED</li>
-            </ul>
+            <h3 style="margin:0">Session locked</h3>
+            <p class="muted" style="margin:4px 0 0">Starting session…</p>
           </div>
-
-          <!-- Block 7: Grace Period Controls (System Override) -->
-          <div id="grace-controls" class="is-hidden" style="border-top: var(--border-glass); padding-top: 16px; margin-top: 16px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px;">
-            <div style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--amber); letter-spacing: 0.14em; text-transform: uppercase;">SYSTEM OVERRIDE</div>
-            <div class="override-timer" id="grace-countdown" style="font-family: var(--font-mono); font-size: 2.8rem; font-weight: 700; color: var(--amber); line-height: 1;">00:30</div>
-            <div style="font-size: 0.76rem; color: var(--sub); margin-bottom: 10px;">A client has connected. Session will start automatically.</div>
-            <div class="override-actions" style="display: flex; gap: 10px; width: 100%;">
-              <button id="go-now-btn" class="btn-primary" style="flex: 1;" type="button">Go Now →</button>
-              <button id="extend-btn" class="btn-secondary" style="flex: 1;" type="button">⏱ Extend</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- State 3: Session Locked Indicator -->
-        <div id="lock-panel" class="card card-accent-rose anim4 is-hidden" style="display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 14px; text-align: center; min-height: 250px;">
-          <div style="font-family: var(--font-mono); font-size: 1.3rem; font-weight: 700; color: var(--rose); letter-spacing: 0.18em; text-transform: uppercase;">SESSION LOCKED</div>
-          <div style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--sub); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 10px;">INITIALIZING NETWORK CONDUIT</div>
-          
-          <div class="terminal-loader-segmented" style="display: flex; gap: 6px;">
-            <div class="segment active" style="width: 14px; height: 14px; background: var(--rose); border-radius: 2px;"></div>
-            <div class="segment active" style="width: 14px; height: 14px; background: var(--rose); border-radius: 2px;"></div>
-            <div class="segment animate-flicker" style="width: 14px; height: 14px; background: rgba(244,63,94,0.2); border-radius: 2px; animation: flicker 1s infinite alternate;"></div>
-            <div class="segment" style="width: 14px; height: 14px; background: rgba(255, 255, 255, 0.05); border-radius: 2px;"></div>
-          </div>
+          <div class="segments"><span class="segment active"></span><span class="segment active"></span><span class="segment animate-flicker"></span><span class="segment"></span></div>
         </div>
       </div>
 
-      <!-- Hidden elements required to prevent JS lookup errors -->
-      <div id="response-timer" style="display: none;">
-        <span id="countdown"></span><span id="response-count"></span><span id="total-receivers"></span>
-      </div>
+      <div id="response-timer" style="display:none"><span id="countdown"></span><span id="response-count"></span><span id="total-receivers"></span></div>
 
-      <!-- Footer Panel -->
-      <footer class="anim5" style="border-top: var(--border-glass); padding-top: 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-top: 10px;">
-        <div style="font-family: var(--font-mono); font-size: 1rem; font-weight: 600;">
-          <span style="color: var(--muted);">HOST:</span> <span class="current-device-name-txt" style="color: var(--text-primary); font-weight: 700;">Node</span>
-        </div>
-        <div class="footer-actions">
-          <button id="reset-device-name-btn" class="btn-secondary" type="button">Change Name</button>
-          <button id="shutdown-btn" class="btn-exit" type="button">End Session</button>
+      <footer style="border-top:1px solid var(--border-subtle);padding-top:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <span style="font-weight:600"><span class="muted">Host:</span> <span class="current-device-name-txt">—</span></span>
+        <div class="footer-actions" style="display:inline-flex;gap:8px">
+          <button id="reset-device-name-btn" class="btn-secondary" type="button">Change name</button>
+          <button id="shutdown-btn" class="btn-exit" type="button">End session</button>
         </div>
       </footer>
     </div>

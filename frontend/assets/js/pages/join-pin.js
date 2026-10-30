@@ -146,7 +146,7 @@ async function fetchSessionDetails(sessionId) {
     const data = await response.json();
     startPinTimer(data.pinExpiry);
   } catch (err) {
-    showFormError("SESSION KEY EXPIRED / REQUEST NEW SESSION");
+    showFormError("Session expired. Please ask the host for a new link.");
     setInputsDisabled(true);
   }
 }
@@ -161,8 +161,8 @@ function startPinTimer(pinExpiryMs) {
     onExpired: () =>
       onPinExpired(
         isQRBased
-          ? 'SESSION KEY EXPIRED. Please scan a new QR code.'
-          : 'SESSION KEY EXPIRED. Please get a new PIN from the host.',
+          ? 'Session expired. Please scan the QR code again.'
+          : 'Session expired. Please ask the host for a new PIN.',
       ),
   });
 }
@@ -227,7 +227,7 @@ async function attemptConnection() {
       clearSessionExited(currentSessionId);
       setRejoiningSession(currentSessionId);
       
-      showPopupMessage('✓ VERIFIED', 'JOINING NETWORK...', 'success');
+      showPopupMessage('Verified', 'Joining session…', 'success');
       
       const socket = io({ transports: ['websocket'] });
       let joinTimeout;
@@ -236,7 +236,7 @@ async function attemptConnection() {
         showFormError('Connection timeout. Please try again.');
         isConnecting = false;
         setInputsDisabled(false);
-        connectBtn.textContent = '[ CONNECT ]';
+        connectBtn.textContent = 'Join session';
         hidePopupMessage();
         socket.disconnect();
       }, 10000);
@@ -248,7 +248,7 @@ async function attemptConnection() {
         
         socket.on('session-joined', (joinData) => {
           clearTimeout(joinTimeout);
-          updatePopupMessage('✓ VERIFIED', 'INITIALIZING NETWORK CONDUIT...', 'success');
+          updatePopupMessage('Verified', 'Redirecting…', 'success');
           
           setTimeout(() => {
             window.location.href = '/session.html?session=' + currentSessionId + '&role=client&peerId=' + peerId;
@@ -260,7 +260,7 @@ async function attemptConnection() {
           showFormError(error.message || 'Failed to join session');
           isConnecting = false;
           setInputsDisabled(false);
-          connectBtn.textContent = '[ CONNECT ]';
+          connectBtn.textContent = 'Join session';
           hidePopupMessage();
           socket.disconnect();
         });
@@ -271,7 +271,7 @@ async function attemptConnection() {
         showFormError('Connection failed. Please try again.');
         isConnecting = false;
         setInputsDisabled(false);
-        connectBtn.textContent = '[ CONNECT ]';
+        connectBtn.textContent = 'Join session';
         hidePopupMessage();
       });
     } else {

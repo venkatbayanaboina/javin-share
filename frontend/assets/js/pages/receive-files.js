@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById("accept-btn").addEventListener("click", () => {
     if (!offeredFile) return;
-    logToConsole('EMITTING OFFER ACCEPTANCE CONDUIT COMMAND', 'success');
+    logToConsole('Accepting file', 'success');
     receiveSocket.emit("accept-file", { sessionId, fileId: offeredFile.id, receiverPeerId: peerId });
     
     // Hide drawer and wait
@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById("reject-btn").addEventListener("click", () => {
     if (!offeredFile) return;
-    logToConsole('EMITTING OFFER REJECTION CONDUIT COMMAND', 'error');
+    logToConsole('Declining file', 'error');
     receiveSocket.emit("reject-file", { sessionId, fileId: offeredFile.id, receiverPeerId: peerId });
     offeredFile = null;
     setPageState(1);
@@ -202,15 +202,15 @@ function logToConsole(message, type = 'info') {
   if (!consoleBody) return;
   const time = new Date().toTimeString().split(' ')[0];
   const colorMap = {
-    info: 'var(--color-indigo)',
-    success: 'var(--color-emerald)',
-    warning: 'var(--color-amber)',
-    error: 'var(--color-coral)'
+    info: 'var(--primary)',
+    success: 'var(--success)',
+    warning: 'var(--warning)',
+    error: 'var(--danger)'
   };
-  const color = colorMap[type] || 'var(--color-text-primary)';
+  const color = colorMap[type] || 'var(--text-1)';
   const logRow = document.createElement('div');
   logRow.style.color = color;
-  logRow.innerHTML = `<span style="color: var(--color-text-muted);">[${time}]</span> ${escapeHtml(message)}`;
+  logRow.innerHTML = `<span style="color: var(--text-3);">[${time}]</span> ${escapeHtml(message)}`;
   consoleBody.appendChild(logRow);
   consoleBody.scrollTop = consoleBody.scrollHeight;
 }
@@ -230,8 +230,8 @@ function setPageState(state) {
       const statusTitle = lobby.querySelector('.status-title');
       const statusSub = lobby.querySelector('.status-sub');
       if (statusIcon) statusIcon.textContent = '🛰️';
-      if (statusTitle) statusTitle.textContent = 'Listening for Incoming Streams';
-      if (statusSub) statusSub.textContent = 'Conduit ready. Waiting for sender file offers.';
+      if (statusTitle) statusTitle.textContent = 'Listening for files';
+      if (statusSub) statusSub.textContent = 'You’ll receive files shared in this session.';
     }
     if (drawer) drawer.classList.add('is-hidden');
     if (progress) progress.classList.add('is-hidden');
@@ -416,9 +416,9 @@ function setupSocket() {
       const statusIcon = lobby.querySelector('.status-icon');
       const statusTitle = lobby.querySelector('.status-title');
       const statusSub = lobby.querySelector('.status-sub');
-      if (statusIcon) statusIcon.textContent = '⏳';
-      if (statusTitle) statusTitle.textContent = 'SENDER UPLOADING CONDUIT STREAMS...';
-      if (statusSub) statusSub.textContent = 'Preparing conduit download pipeline...';
+      if (statusIcon) statusIcon.textContent = '…';
+      if (statusTitle) statusTitle.textContent = 'Sender is uploading…';
+      if (statusSub) statusSub.textContent = 'Preparing download…';
     }
   });
 
@@ -475,7 +475,7 @@ function setupSocket() {
   });
 
   receiveSocket.on("download-ready", ({ file, downloadUrl }) => {
-    logToConsole('CONDUIT CHANNEL READY: DOWNLOAD INITIALIZED', 'success');
+    logToConsole('Download ready', 'success');
     try { if (window.responseCountdown) clearInterval(window.responseCountdown); } catch (_) {}
     try { document.getElementById('response-timer').classList.add('is-hidden'); } catch (_) {}
     try { document.getElementById('sender-progress').classList.add('is-hidden'); } catch (_) {}
@@ -556,7 +556,7 @@ function setupSocket() {
       
       const title = document.getElementById('download-title');
       if (title) {
-        title.innerHTML = `DOWNLOAD COMPLETE <span id="download-title-pct" style="color: var(--color-emerald);">100%</span>`;
+        title.innerHTML = `DOWNLOAD COMPLETE <span id="download-title-pct" style="color: var(--success);">100%</span>`;
       }
       
       const stats = document.getElementById('download-stats');
@@ -564,7 +564,7 @@ function setupSocket() {
         stats.innerHTML = `
           <div class="stat-item">
             <div class="stat-label">Status</div>
-            <div class="stat-value emerald" style="color: var(--color-emerald);">COMPLETE</div>
+            <div class="stat-value emerald" style="color: var(--success);">COMPLETE</div>
           </div>
           <div class="stat-item">
             <div class="stat-label">Size</div>
@@ -597,7 +597,7 @@ function setupSocket() {
   });
 
   receiveSocket.on('session-invalidated', (data) => {
-    logToConsole('SESSION KEY REFRESHED / INVALIDATED', 'error');
+    logToConsole('Session updated', 'error');
     alert('Session has been invalidated. The host created a new one.');
     window.location.href = role === 'host' ? '/' : `/session-ended.html?session=${sessionId}&role=${role}`;
   });

@@ -304,12 +304,11 @@ async function copyTextToClipboard(text) {
         setTimeout(() => {
           if (button && button.disabled) {
             button.disabled = false;
-            button.textContent = '⏱️ Extend 30s';
+            button.textContent = 'Extend 30s';
             console.log('Extend button timeout - re-enabled');
           }
-        }, 10000); // 10 second timeout
+        }, 10000);
       }
-
       function setupSocket(sessionId) {
         console.log('=== SETUP SOCKET CALLED ===');
         console.log('Session ID:', sessionId);
@@ -345,11 +344,10 @@ async function copyTextToClipboard(text) {
           const extendBtn = document.getElementById('extend-btn');
           if (extendBtn) {
             extendBtn.disabled = false;
-            extendBtn.textContent = '⏱️ Extend 30s';
+            extendBtn.textContent = 'Extend 30s';
           }
           /* Grace countdown is shown in the host UI — no toast spam */
         });
-
         hostSocket.on('grace-timer-cleared', () => {
           console.log('Grace timer cleared by server');
           window.graceController?.stop();
@@ -523,7 +521,7 @@ async function copyTextToClipboard(text) {
             const extendBtn = document.getElementById('extend-btn');
             if (extendBtn) {
               extendBtn.disabled = false;
-              extendBtn.textContent = '⏱️ Extend 30s';
+              extendBtn.textContent = 'Extend 30s';
             }
           } else {
             showNotification(data?.message || "Failed to extend grace period", "error");
@@ -531,7 +529,7 @@ async function copyTextToClipboard(text) {
             const extendBtn = document.getElementById('extend-btn');
             if (extendBtn) {
               extendBtn.disabled = false;
-              extendBtn.textContent = '⏱️ Extend 30s';
+              extendBtn.textContent = 'Extend 30s';
             }
           }
         });
@@ -563,11 +561,11 @@ async function copyTextToClipboard(text) {
             if (clientCount > 0) {
               listEl.innerHTML = clients.map(c => `
                 <li style="margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
-                  <span style="color: var(--color-brand-primary); font-weight: bold;">├─</span> ${escapeHtml(c.deviceName || 'Client Node')}
+                  <span class="device-dot"></span> ${escapeHtml(c.deviceName || 'Client Node')}
                 </li>
               `).join('');
             } else {
-              listEl.innerHTML = '<li style="color: var(--color-text-muted);">NO NODES CONNECTED</li>';
+              listEl.innerHTML = '<li class="device-empty">No devices connected yet</li>';
             }
           }
           
@@ -745,7 +743,7 @@ async function copyTextToClipboard(text) {
               showNotification(ack?.message || 'No clients connected yet. Please wait.', 'warning');
               // Re-enable button on failure
               goNowBtn.disabled = false;
-              goNowBtn.textContent = 'Go Now →';
+              goNowBtn.textContent = 'Start now';
             }
           }); 
         } catch (e) {
@@ -753,7 +751,7 @@ async function copyTextToClipboard(text) {
           showNotification('Error sending request. Please try again.', 'error');
           // Re-enable button on error
           goNowBtn.disabled = false;
-          goNowBtn.textContent = 'Go Now →';
+          goNowBtn.textContent = 'Start now';
         }
       });
       document.getElementById('extend-btn').addEventListener('click', () => {
@@ -795,7 +793,7 @@ async function copyTextToClipboard(text) {
               showNotification(ack?.message || 'Failed to extend grace period', 'error');
               // Re-enable button on failure
               extendBtn.disabled = false;
-              extendBtn.textContent = '⏱️ Extend 30s';
+              extendBtn.textContent = 'Extend 30s';
             }
           }); 
         } catch (e) {
@@ -803,7 +801,7 @@ async function copyTextToClipboard(text) {
           showNotification('Error sending request. Please try again.', 'error');
           // Re-enable button on error
           extendBtn.disabled = false;
-          extendBtn.textContent = '⏱️ Extend 30s';
+          extendBtn.textContent = 'Extend 30s';
         }
       });
       
