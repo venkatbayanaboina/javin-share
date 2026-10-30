@@ -15,7 +15,7 @@
 * **Zero-Cloud Architecture**: Encrypted TLS-based transport (`HTTPS`) communicating directly between devices over the local network.
 * **Large File Capacities**: Support for files up to **50 GB** and beyond, controlled dynamically by configurable upload caps.
 * **Real-time Session Sync**: Real-time page coordination, lock states, download queues, and progress tracking powered by **Socket.IO**.
-* **Authoritative Security**: Host-only administrative controls, automated failed PIN rate-limiting, and deep path/filename sanitization.
+* **Authoritative Security**: Host-only administrative controls, automated failed PIN rate-limiting, multi-layer transfer-id validation against path traversal, and deep path/filename sanitization.
 
 ---
 
@@ -91,23 +91,26 @@ Javin-Share-/
 │   │   ├── state/                # Store singleton (sessions, active files, download queues)
 │   │   └── services/
 │   │       ├── transfer/         # Coordinator & Strategies (disk, stream, buffered)
-│   │       ├── session.service   # Host-client handshake & state orchestration
-│   │       └── download-queue    # Multi-client queue and backpressure services
-│   └── test/                     # 44-test suite (unit & integration)
+│   │       ├── session.service.js     # Host-client handshake & state orchestration
+│   │       └── download-queue.service.js  # Multi-client queue and backpressure services
+│   └── test/                     # 56-test suite (unit, integration & security regression)
 ├── frontend/
 │   ├── host.html                 # Host admin panel (PIN/QR generator)
 │   ├── join-pin.html             # Client pin verification portal
 │   ├── session.html              # Central Session file sharing hub
 │   ├── send-files.html           # Sender file-staging interface
 │   ├── receive-files.html        # Receiver queuing & progress interface
+│   ├── history.html              # Transfer history & device naming
 │   ├── session-ended.html        # Session termination interface
-│   └── assets/js/                # Client ES6 Modules (core, pages, and socket drivers)
+│   └── assets/                   # Client ES6 modules (js/) & modular stylesheets (css/)
 ├── docs/
+│   ├── evaluation_of_architecture.md # Benchmark methodology, results & strategy routing
+│   ├── SOCKET_EVENTS.md          # Socket.IO event contract (client ⇄ server)
 │   ├── FINAL_PLAN.md             # Spec audits & deferred timers implementation plan
 │   ├── POST_RESTRUCTURE_ROADMAP.md # Detailed track progress and engineering logs
 │   ├── PHASE_PROGRESS.md        # Checkbox-level phase progress manifest
 │   ├── SECURITY.md               # LAN security model and rate-limit controls
-│   └── benchmarks/               # Network performance logs & LAN benchmark configurations
+│   └── benchmarks/               # Append-only benchmark result log (BASELINE.md)
 ├── package.json                  # Root script orchestration
 └── launchers/                    # Native platform launchers & installers
     ├── setup (for Windows).bat
@@ -166,11 +169,15 @@ cd backend && npm install
 # Boot development environment with hot-reloading
 npm run dev
 
-# Run comprehensive 44-test suite (unit, integration, and strategy tests)
+# Run comprehensive 56-test suite (unit, integration, strategy & security regression tests)
 npm test
 
 # Run isolated transfer optimization strategy tests
 npm run test:opt
+
+# Run only unit tests / only integration tests
+npm run test:unit
+npm run test:integration
 
 # Run code linters (ESLint)
 npm run lint
@@ -193,6 +200,24 @@ npm run format:check
 | `TRANSFER_SPOOL_THRESHOLD_BYTES`| `Number`| `268,435,456` | Spool boundary for buffered strategy (default: 256 MiB). |
 | `TRANSFER_CHUNK_SIZE_BYTES` | `Number` | `8,388,608` | Chunk buffer size for stream relays (default: 8 MiB). |
 | `TRANSFER_MAX_RECEIVER_BUFFER_SIZE` | `Number` | `16,777,216` | Per-receiver queue cap before a stalled receiver is dropped (default: 16 MB). |
+| `TRANSFER_STREAM_RELAY_TIMEOUT_MS` | `Number` | `30000` | No-receiver window before stream/buffered uploads fall back to disk spool. |
+| `MAX_CONCURRENT_DOWNLOADS` | `Number` | `3` | Parallel downloads permitted per receiver before queuing. |
+| `PIN_RATE_WINDOW_MS` | `Number` | `900000` | Brute-force tracking window for failed PIN attempts (default: 15 min). |
+| `PIN_LOCKOUT_MS` | `Number` | `300000` | Lockout duration after exhausting PIN attempts (default: 5 min). |
+
+---
+
+## Performance
+
+Benchmarked on loopback (127.0.0.1) with a single receiver and a 10 GB payload — loopback deliberately removes the physical network from the measurement, isolating each strategy's server-side cost:
+
+| Strategy | Upload Throughput | Download Throughput | Time-To-First-Byte |
+|----------|-------------------|---------------------|--------------------|
+| `relay-disk` | 4453.1 Mbps | 7914.1 Mbps | 15 ms |
+| `relay-stream` | 4799.6 Mbps | 4741.5 Mbps | **8 ms** |
+| `relay-buffered` | 4906.3 Mbps | 4844.5 Mbps | 10 ms |
+
+The streaming TTFB advantage appears on large payloads where disk-write finalization dominates; at small payloads (100 MB) the ordering reverses. Full methodology, the failure-mode simulations (resumable downloads, mid-stream disconnect cleanup, flat memory under 20 GB+ transfers), and the raw result log live in [docs/evaluation_of_architecture.md](docs/evaluation_of_architecture.md) and [docs/benchmarks/BASELINE.md](docs/benchmarks/BASELINE.md).
 
 ---
 
@@ -201,7 +226,8 @@ npm run format:check
 JAVIN FileShare is optimized for **trusted local area networks** (such as home, small-office, or closed private networks). 
 * **Dynamic Timer Controls**: Countdown redirects and grace windows are authoritative and held securely on the server.
 * **Administrative Controls**: Grace shutdowns are host-restricted and authenticated at the socket/session level.
-* **Malicious Input Defense**: Paths, names, and identifiers are deeply validated against traversal payloads.
+* **Multi-Layer ID Validation**: Every client-supplied `sessionId`/`fileId`/`receiverPeerId` — from the `x-file-id` header, query string, multipart field, or socket payload — must match `[a-zA-Z0-9_-]{1,64}` and is re-validated at the socket handler, the Transfer Coordinator, and inside the disk strategy before any on-disk path is derived. Regression-tested in `backend/test/integration/path-traversal.test.mjs`.
+* **Hardened HTTP Semantics**: Malformed or negative `Range` headers answer `416` instead of crashing; resumable downloads use `206 Partial Content`; filenames are sanitized for storage and `Content-Disposition`.
 
 For full detail, refer to the [LAN Security Manifest (docs/SECURITY.md)](docs/SECURITY.md).
 
