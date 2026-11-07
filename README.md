@@ -13,7 +13,8 @@
 * **Instant Session Joining**: Passwordless pairing via dynamically generated **PINs** and high-contrast **QR codes**.
 * **Zero-Cloud Architecture**: Encrypted TLS-based transport (`HTTPS`) communicating directly between devices over the local network.
 * **Large File Capacities**: Support for files up to **50 GB** and beyond, controlled dynamically by configurable upload caps.
-* **Real-time Session Sync**: Real-time page coordination, lock states, download queues, and progress tracking powered by **Socket.IO**.
+* **Real-time Session Sync**: Real-time page coordination, lock states, download queues, and progress tracking powered by **Socket.IO** (control channel only — file bytes travel over streaming HTTP).
+* **Refresh-Safe Transfers**: A sender reloading their page never scatters receivers — server-side grace windows distinguish a refresh from a real departure. The Screen Wake Lock API keeps phones from throttling long transfers.
 * **Authoritative Security**: Host-only administrative controls, automated failed PIN rate-limiting, multi-layer transfer-id validation against path traversal, and deep path/filename sanitization.
 
 ---
@@ -92,7 +93,7 @@ Javin-Share-/
 │   │       ├── transfer/         # Coordinator & Strategies (disk, stream, buffered)
 │   │       ├── session.service.js     # Host-client handshake & state orchestration
 │   │       └── download-queue.service.js  # Multi-client queue and backpressure services
-│   └── test/                     # 62-test suite (unit, integration & security regression)
+│   └── test/                     # 65-test suite (unit, integration & security regression)
 ├── frontend/
 │   ├── host.html                 # Host admin panel (PIN/QR generator)
 │   ├── join-pin.html             # Client pin verification portal
@@ -166,7 +167,7 @@ cd backend && npm install
 # Boot development environment with hot-reloading
 npm run dev
 
-# Run the 62-test suite (unit, integration, strategy & security regression tests)
+# Run the 65-test suite (unit, integration, strategy & security regression tests)
 npm test
 
 # Run isolated transfer optimization strategy tests
@@ -235,7 +236,9 @@ Loopback numbers above are far beyond any Wi-Fi link — on a real LAN your acce
 
 JAVIN FileShare is optimized for **trusted local area networks** (such as home, small-office, or closed private networks). 
 * **Dynamic Timer Controls**: Countdown redirects and grace windows are authoritative and held securely on the server.
-* **Administrative Controls**: Grace shutdowns are host-restricted and authenticated at the socket/session level.
+* **Administrative Controls**: Host identity is bound server-side — only a socket originating from the host machine can join as host or reach shutdown controls, regardless of what a client claims.
+* **Spoof-Resistant Client Identity**: `X-Forwarded-For` is never trusted (no proxy by design), so rate-limit buckets and host-page gating cannot be bypassed with a spoofed header; download URLs authorize the receiver against the session's peer list before a single byte is streamed.
+* **Sender-Refresh Grace**: `leave-send-page` / `cancel-transfer` fired by a page reload are deferred and cancelled when the sender rejoins, so receivers stay on the receive page.
 * **Multi-Layer ID Validation**: Every client-supplied `sessionId`/`fileId`/`receiverPeerId` — from the `x-file-id` header, query string, multipart field, or socket payload — must match `[a-zA-Z0-9_-]{1,64}` and is re-validated at the socket handler, the Transfer Coordinator, and inside the disk strategy before any on-disk path is derived. Regression-tested in `backend/test/integration/path-traversal.test.mjs`.
 * **Hardened HTTP Semantics**: Malformed or negative `Range` headers answer `416` instead of crashing; resumable downloads use `206 Partial Content`; filenames are sanitized for storage and `Content-Disposition`.
 

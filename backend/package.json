@@ -12,6 +12,7 @@
     "test:unit": "node --import ./test/setup-env.mjs --test test/unit/**/*.test.mjs",
     "test:integration": "node --import ./test/setup-env.mjs --test test/integration/**/*.test.mjs",
     "lint": "eslint src test",
+    "benchmark": "node scripts/run-all-benchmarks.mjs",
     "format": "prettier --write \"src/**/*.js\" \"test/**/*.mjs\"",
     "format:check": "prettier --check \"src/**/*.js\" \"test/**/*.mjs\""
   },
