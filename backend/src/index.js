@@ -12,6 +12,7 @@ import { createApp } from './create-app.js';
 import { registerSockets } from './sockets/index.js';
 import { gracefulShutdown } from './shutdown.js';
 import { prunePinRateLimitStore } from './services/pin-rate-limit.service.js';
+import { runMaintenanceSweep } from './jobs/cleanup.job.js';
 
 setLogLevel(config.logLevel);
 
@@ -32,10 +33,25 @@ const server = https.createServer(
   app,
 );
 
+// A second instance (or any port conflict) must fail with a clear message,
+// not an unhandled 'error' event.
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    logger.error(
+      `Port ${config.port} is already in use — is another JAVIN FileShare instance still running?`,
+    );
+  } else {
+    logger.error('HTTPS server error:', err);
+  }
+  process.exit(1);
+});
+
 const io = new Server(server, {
-  cors: { origin: '*', methods: ['GET', 'POST'] },
-  maxHttpBufferSize: 1e9,
-  pingTimeout: 120000,
+  // No CORS config: the app is same-origin (pages are served by this server),
+  // and without permissive CORS headers a cross-site WebSocket hijack from a
+  // random web page cannot connect.
+  maxHttpBufferSize: 1e6, // file bytes travel over HTTP, not WS — 1MB is ample
+  pingTimeout: 25000, // LAN dead-peer detection; 120s left zombie peers holding locks
   pingInterval: 25000,
   transports: ['websocket'],
 });
@@ -45,21 +61,32 @@ deps.server = server;
 
 registerSockets(io, deps);
 
-setInterval(() => {
+const deviceCleanupTimer = setInterval(() => {
   try {
     cleanupOrphanedDeviceNames(store.sessions);
   } catch (error) {
     logger.error('Error in device name cleanup:', error);
   }
 }, 300000);
+deviceCleanupTimer.unref();
 
-setInterval(() => {
+const pinPruneTimer = setInterval(() => {
   try {
     prunePinRateLimitStore();
   } catch (error) {
     logger.error('Error in PIN rate-limit cleanup:', error);
   }
 }, 600000);
+pinPruneTimer.unref();
+
+const maintenanceTimer = setInterval(() => {
+  try {
+    runMaintenanceSweep(io);
+  } catch (error) {
+    logger.error('Error in maintenance sweep:', error);
+  }
+}, 300000);
+maintenanceTimer.unref();
 
 const mdnsServer = startMdnsResponder(config.customHost, store.localIP, logger);
 
@@ -89,6 +116,21 @@ process.on('SIGTERM', () => {
   gracefulShutdown(server, io);
 });
 
+// A stray rejection in any socket callback must not kill the server silently.
+process.on('unhandledRejection', (reason) => {
+  logger.error('Unhandled promise rejection:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  logger.error('Uncaught exception:', err);
+  if (mdnsServer) {
+    try {
+      mdnsServer.destroy();
+    } catch (_) {}
+  }
+  gracefulShutdown(server, io);
+});
+
 server.listen(config.port, config.host, async () => {
   const displayHost = config.customHost || store.localIP;
   logger.info(`FileShare server running on ${config.protocol}://${displayHost}:${config.port}`);
@@ -98,7 +140,8 @@ server.listen(config.port, config.host, async () => {
 
   if (config.openBrowser) {
     try {
-      await open(`${config.protocol}://${displayHost}:${config.port}`);
+      // Always open localhost on the host machine — no mDNS dependency
+      await open(`${config.protocol}://localhost:${config.port}`);
       logger.info('Browser opened automatically');
     } catch (e) {
       logger.info(`Could not open browser automatically: ${e.message}`);

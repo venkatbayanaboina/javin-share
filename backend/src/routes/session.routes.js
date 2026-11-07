@@ -18,6 +18,7 @@ import {
 } from '../services/pin-rate-limit.service.js';
 import { getClientIp, isLocalRequest } from '../utils/request.js';
 import { isSafeId } from '../utils/ids.js';
+import { asyncHandler } from '../utils/async-handler.js';
 import { gracefulShutdown } from '../shutdown.js';
 import { getTransferCoordinator } from '../services/transfer/coordinator.service.js';
 
@@ -107,71 +108,80 @@ export function createSessionRouter(deps) {
     }, 1000);
   });
 
-  router.get('/get-current-session', async (req, res) => {
-    const requestedSessionId = req.query.session;
+  router.get(
+    '/get-current-session',
+    asyncHandler(async (req, res) => {
+      const requestedSessionId = req.query.session;
 
-    if (requestedSessionId) {
-      const requestedSession = store.sessions.get(requestedSessionId);
-      if (requestedSession && Date.now() <= requestedSession.pinExpiry) {
+      if (requestedSessionId) {
+        const requestedSession = store.sessions.get(requestedSessionId);
+        if (requestedSession && Date.now() <= requestedSession.pinExpiry) {
+          const pinUrl = buildPinUrl(store.localIP);
+          const qrUrl = buildPinUrl(store.localIP);
+          const qrDataUrl = await QRCode.toDataURL(qrUrl);
+          const localUrl = buildLocalUrl();
+          res.json({
+            sessionId: requestedSession.id,
+            pin: requestedSession.pin,
+            url: pinUrl,
+            localUrl,
+            qrDataUrl,
+            pinExpiry: requestedSession.pinExpiry,
+          });
+          return;
+        }
+        res.status(404).json({ error: 'Session not found or expired' });
+        return;
+      }
+
+      const forceNew = req.query.forceNew === '1';
+      let session = store.currentHostSessionId
+        ? store.sessions.get(store.currentHostSessionId)
+        : null;
+
+      // Single active session enforcement:
+      // If a session is already active (exists in store and has not expired), we reuse it.
+      // We ignore forceNew if there is an active session, to prevent duplicate sessions.
+      if (session && Date.now() <= session.pinExpiry) {
         const pinUrl = buildPinUrl(store.localIP);
         const qrUrl = buildPinUrl(store.localIP);
         const qrDataUrl = await QRCode.toDataURL(qrUrl);
         const localUrl = buildLocalUrl();
         res.json({
-          sessionId: requestedSession.id,
-          pin: requestedSession.pin,
+          sessionId: session.id,
+          pin: session.pin,
           url: pinUrl,
           localUrl,
           qrDataUrl,
-          pinExpiry: requestedSession.pinExpiry,
+          pinExpiry: session.pinExpiry,
         });
         return;
       }
-      res.status(404).json({ error: 'Session not found or expired' });
-      return;
-    }
 
-    const forceNew = req.query.forceNew === '1';
-    let session = store.currentHostSessionId
-      ? store.sessions.get(store.currentHostSessionId)
-      : null;
+      // No active session exists or it has expired - create a new one
+      // Only allow local request to create a new session. If it is non-local (external client device), return 404.
+      if (!isLocalRequest(req)) {
+        res.status(404).json({ error: 'No active session found' });
+        return;
+      }
 
-    // Single active session enforcement:
-    // If a session is already active (exists in store and has not expired), we reuse it.
-    // We ignore forceNew if there is an active session, to prevent duplicate sessions.
-    if (session && Date.now() <= session.pinExpiry) {
-      const pinUrl = buildPinUrl(store.localIP);
-      const qrUrl = buildPinUrl(store.localIP);
-      const qrDataUrl = await QRCode.toDataURL(qrUrl);
-      const localUrl = buildLocalUrl();
-      res.json({
-        sessionId: session.id,
-        pin: session.pin,
-        url: pinUrl,
-        localUrl,
-        qrDataUrl,
-        pinExpiry: session.pinExpiry,
-      });
-      return;
-    }
-
-    // No active session exists or it has expired - create a new one
-    // Only allow local request to create a new session. If it is non-local (external client device), return 404.
-    if (!isLocalRequest(req)) {
-      res.status(404).json({ error: 'No active session found' });
-      return;
-    }
-
-    try {
-      const newSessionData = await createSession(deps.io, forceNew);
-      res.json(newSessionData);
-    } catch (err) {
-      logger.error('Error creating session:', err);
-      res.status(500).json({ error: 'Could not create session.' });
-    }
-  });
+      try {
+        const newSessionData = await createSession(deps.io, forceNew);
+        res.json(newSessionData);
+      } catch (err) {
+        logger.error('Error creating session:', err);
+        res.status(500).json({ error: 'Could not create session.' });
+      }
+    }),
+  );
 
   router.get('/api/benchmark/register-session/:sessionId/:fileId', (req, res) => {
+    // Benchmark-only endpoint: injects mock peers into a real session, so it
+    // must never be reachable in normal operation.
+    if (process.env.JAVIN_TEST !== '1' && process.env.JAVIN_BENCHMARK !== '1') {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
     const { sessionId, fileId } = req.params;
     const session = store.sessions.get(sessionId);
     if (!session) return res.status(404).json({ error: 'Session not found' });

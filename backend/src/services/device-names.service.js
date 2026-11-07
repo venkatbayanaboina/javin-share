@@ -34,9 +34,14 @@ export function getDeviceName(peerId) {
   return deviceNamesMap.get(peerId) || '';
 }
 
+const MAX_DEVICE_NAME_LENGTH = 64;
+
 export function setDeviceName(peerId, deviceName) {
-  if (deviceName && deviceName.trim()) {
-    deviceNamesMap.set(peerId, deviceName.trim());
+  // Clamp: the value is client-supplied and persisted to disk on every update.
+  const name =
+    typeof deviceName === 'string' ? deviceName.slice(0, MAX_DEVICE_NAME_LENGTH).trim() : '';
+  if (name) {
+    deviceNamesMap.set(peerId, name);
     saveDeviceNames();
     return true;
   }

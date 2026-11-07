@@ -1,6 +1,6 @@
 import { config } from '../config.js';
 import { logger } from '../logger.js';
-import { store } from '../state/store.js';
+import { store, pushRecentTransfer } from '../state/store.js';
 import { getDeviceName, setDeviceName } from '../services/device-names.service.js';
 import { checkAndReleaseStaleTransferLocks } from '../services/transfer-lock.service.js';
 import {
@@ -20,7 +20,21 @@ import {
 } from '../services/grace-redirect.service.js';
 import { assertHostPeer } from '../services/peer-auth.service.js';
 import { isSafeId } from '../utils/ids.js';
+import { isLocalSocket } from '../utils/request.js';
 import { getTransferCoordinator } from '../services/transfer/coordinator.service.js';
+
+/**
+ * True when the emitting socket may act as `claimedId`.
+ *
+ * Sockets carry their bound peerId in socket.data after join-session; when
+ * present it must match the claimed id, so an authenticated peer cannot
+ * impersonate another peer. Sockets without bound data (legacy test mocks)
+ * skip the check for backwards compatibility.
+ */
+function canActAs(socket, claimedId) {
+  if (!socket?.data?.peerId) return true;
+  return socket.data.peerId === claimedId;
+}
 
 function startTransfer(session, fileId, io) {
   const activeTransfer = session.activeTransfer;
@@ -60,7 +74,7 @@ function startTransfer(session, fileId, io) {
     const receiver = session.peers.get(receiverPeerId);
     if (receiver) {
       try {
-        store.recentTransfers.push({
+        pushRecentTransfer({
           senderId: senderPeerId,
           senderName: sender.deviceName || '',
           receiverId: receiverPeerId,
@@ -206,6 +220,18 @@ export function registerSocketHandlers(io) {
         return socket.emit('error', { message: 'Session not found' });
       }
 
+      // Check if peer already exists with different socket
+      const existing = session.peers.get(peerId);
+
+      // Host identity is bound server-side: only the machine running the
+      // server may join as host (or claim an existing host's peer id). This
+      // keeps /api/shutdown and other host-only controls out of reach for
+      // other LAN clients, even if they learn a session id.
+      if ((role === 'host' || existing?.role === 'host') && !isLocalSocket(socket)) {
+        logger.warn(`🚫 Rejected host-role join for ${peerId} from non-local socket ${socket.id}`);
+        return socket.emit('error', { message: 'Only the host machine may act as host' });
+      }
+
       // Allow peers to rejoin sessions they previously exited
       // Clear the exited status when they rejoin
       if (session.exitedPeers && session.exitedPeers.has(peerId)) {
@@ -213,9 +239,17 @@ export function registerSocketHandlers(io) {
         session.exitedPeers.delete(peerId);
       }
 
-      // Check if peer already exists with different socket
-      const existing = session.peers.get(peerId);
       if (existing && existing.socketId !== socket.id) {
+        // Identity-takeover guard: a different remote address may not take
+        // over a peer id that is still bound elsewhere. Both addresses are
+        // known for real sockets; test mocks (no handshake) skip this.
+        const newAddr = socket.handshake?.address || null;
+        const oldAddr = existing.handshakeAddress || null;
+        if (newAddr && oldAddr && newAddr !== oldAddr) {
+          logger.warn(`🚫 Rejected identity takeover of ${peerId} from socket ${socket.id}`);
+          return socket.emit('error', { message: 'Peer identity is already in use' });
+        }
+
         logger.info(`🔄 Updating socket for existing peer ${peerId}`);
         // Leave old socket from session if it exists
         const oldSocket = io.sockets.sockets.get(existing.socketId);
@@ -230,7 +264,7 @@ export function registerSocketHandlers(io) {
         }
       }
 
-      const queryPage = socket.handshake.query.page;
+      const queryPage = socket.handshake?.query?.page;
       const joiningSessionPage = queryPage === 'main' || queryPage === 'session';
       const joiningSendPage = queryPage === 'send';
       const joiningReceivePage = queryPage === 'receive';
@@ -248,6 +282,7 @@ export function registerSocketHandlers(io) {
         socketId: socket.id,
         peerId,
         deviceName: finalDeviceName,
+        handshakeAddress: socket.handshake?.address || null,
         isDisconnected: false,
         disconnectedAt: null,
       };
@@ -338,9 +373,11 @@ export function registerSocketHandlers(io) {
 
       const peer = Array.from(session.peers.values()).find((p) => p.socketId === socket.id);
       if (peer) {
+        // Clamp length: this value is persisted to device_names.json
+        const clampedName = typeof deviceName === 'string' ? deviceName.slice(0, 64) : '';
         // 🆕 NEW: Update both session and persistent storage
-        peer.deviceName = deviceName;
-        setDeviceName(peer.peerId, deviceName); // Save to persistent storage
+        peer.deviceName = clampedName;
+        setDeviceName(peer.peerId, clampedName); // Save to persistent storage
 
         logger.info(`📱 Device name updated for ${peer.peerId}: ${deviceName}`);
         logger.info(`💾 Device name saved to persistent storage for ${peer.peerId}`);
@@ -348,7 +385,7 @@ export function registerSocketHandlers(io) {
         // Notify other peers about the name update
         io.in(sessionId).emit('peer-name-updated', {
           peerId: peer.peerId,
-          deviceName: deviceName,
+          deviceName: clampedName,
         });
       }
     });
@@ -462,6 +499,9 @@ export function registerSocketHandlers(io) {
       const session = store.sessions.get(sessionId);
       if (!session)
         return typeof ack === 'function' && ack({ ok: false, reason: 'session_not_found' });
+      if (!canActAs(socket, senderId)) {
+        return typeof ack === 'function' && ack({ ok: false, reason: 'forbidden' });
+      }
 
       // Check if host is in the main page
       const hostPeer = Array.from(session.peers.values()).find((p) => p.role === 'host');
@@ -597,6 +637,7 @@ export function registerSocketHandlers(io) {
     socket.on('release-send-lock', ({ sessionId, senderId }) => {
       const session = store.sessions.get(sessionId);
       if (!session) return;
+      if (!canActAs(socket, senderId)) return;
       if (session.currentSenderPeerId === senderId) {
         session.currentSenderPeerId = null;
         logger.info(`🔓 Send lock released by ${senderId} in session ${sessionId}`);
@@ -641,6 +682,15 @@ export function registerSocketHandlers(io) {
           `🚫 Rejected request-to-send with invalid session/sender/file id from ${socket.id}`,
         );
         return socket.emit('send-rejected', { reason: 'Invalid session, sender, or file id' });
+      }
+
+      // A joined socket may not send on behalf of another peer
+      if (!canActAs(socket, senderId)) {
+        logger.warn(`🚫 Rejected request-to-send from socket claiming foreign id ${senderId}`);
+        return socket.emit('send-rejected', {
+          fileId: file.id,
+          reason: 'Sender identity mismatch',
+        });
       }
 
       logger.info(`Send request from ${senderId} for file ${file.id}`);
@@ -822,6 +872,7 @@ export function registerSocketHandlers(io) {
       logger.info(`File ${fileId} accepted by ${receiverPeerId}`);
       const session = store.sessions.get(sessionId);
       if (!session) return;
+      if (!canActAs(socket, receiverPeerId)) return;
       if (!session.activeTransfer || session.activeTransfer.fileId !== fileId) return;
       session.activeTransfer.acceptedReceivers.add(receiverPeerId);
       session.activeTransfer.totalResponses++;
@@ -888,6 +939,7 @@ export function registerSocketHandlers(io) {
       logger.info(`File ${fileId} rejected by ${receiverPeerId}`);
       const session = store.sessions.get(sessionId);
       if (!session || !session.activeTransfer) return;
+      if (!canActAs(socket, receiverPeerId)) return;
       if (session.activeTransfer.fileId !== fileId) return;
       session.activeTransfer.rejectedReceivers.add(receiverPeerId);
       session.activeTransfer.totalResponses++;
@@ -971,6 +1023,15 @@ export function registerSocketHandlers(io) {
         checkAndReleaseStaleTransferLocks(sessionId, io);
         return;
       }
+      // Only the sender of the active transfer may complete it
+      if (socket.data?.peerId && socket.data.peerId !== session.activeTransfer.senderPeerId) {
+        logger.warn(`🚫 Rejected upload-complete from non-sender ${socket.data.peerId}`);
+        return;
+      }
+      if (!file || typeof file.id !== 'string' || !isSafeId(file.id)) {
+        logger.warn(`🚫 Rejected upload-complete with invalid file id from ${socket.id}`);
+        return;
+      }
       const { acceptedReceivers } = session.activeTransfer;
       const baseDownloadUrl = `/download/${sessionId}/${file.id}`;
       // Initialize/refresh pending counter for this file so we only delete after all receivers finish
@@ -992,7 +1053,7 @@ export function registerSocketHandlers(io) {
           // Record per-receiver recent transfer with names
           try {
             const senderPeer = session.peers.get(session.activeTransfer.senderPeerId) || {};
-            store.recentTransfers.push({
+            pushRecentTransfer({
               senderId: session.activeTransfer.senderPeerId,
               senderName: senderPeer.deviceName || '',
               receiverId: receiverPeerId,
@@ -1001,8 +1062,6 @@ export function registerSocketHandlers(io) {
               size: file.size,
               timestamp: Date.now(),
             });
-            if (store.recentTransfers.length > 100)
-              store.recentTransfers.splice(0, store.recentTransfers.length - 100);
           } catch (_) {}
 
           // Check download flag for this receiver
@@ -1111,6 +1170,7 @@ export function registerSocketHandlers(io) {
       if (!session || !session.activeTransfer) return;
       if (session.activeTransfer.fileId !== fileId) return;
       if (session.activeTransfer.senderPeerId !== senderId) return;
+      if (!canActAs(socket, senderId)) return;
 
       // Compute remaining; add 30s; reset timer to new deadline
       const now = Date.now();
@@ -1161,6 +1221,7 @@ export function registerSocketHandlers(io) {
       if (!session || !session.activeTransfer) return;
       if (session.activeTransfer.fileId !== fileId) return;
       if (session.activeTransfer.senderPeerId !== senderId) return;
+      if (!canActAs(socket, senderId)) return;
       try {
         if (session.activeTransfer.responseTimer)
           clearTimeout(session.activeTransfer.responseTimer);
@@ -1190,6 +1251,7 @@ export function registerSocketHandlers(io) {
       if (!session || !session.activeTransfer) return;
       if (session.activeTransfer.fileId !== fileId) return;
       if (session.activeTransfer.senderPeerId !== senderId) return;
+      if (!canActAs(socket, senderId)) return;
       // Clear timers and active transfer, keep the sender lock so they can immediately send next
       try {
         if (session.activeTransfer.responseTimer)
@@ -1204,6 +1266,20 @@ export function registerSocketHandlers(io) {
     socket.on('cancel-transfer', ({ sessionId }) => {
       const session = store.sessions.get(sessionId);
       if (!session) return;
+      // Only the current sender or the host may cancel — any peer must not be
+      // able to kill someone else's transfer or bounce the room to main.
+      const claimant = socket.data?.peerId;
+      if (claimant) {
+        const peer = session.peers.get(claimant);
+        const isHost = peer?.role === 'host';
+        const isSender =
+          session.currentSenderPeerId === claimant ||
+          session.activeTransfer?.senderPeerId === claimant;
+        if (!isHost && !isSender) {
+          logger.info(`🚫 Ignored cancel-transfer from non-sender ${claimant}`);
+          return;
+        }
+      }
       session.activeTransfer = null;
       session.currentSenderPeerId = null;
       io.in(sessionId).emit('transfer-unlocked');
@@ -1607,6 +1683,9 @@ export function registerSocketHandlers(io) {
       const session = store.sessions.get(sessionId);
       if (!session)
         return typeof ack === 'function' && ack({ ok: false, reason: 'session_not_found' });
+      if (!canActAs(socket, peerId)) {
+        return typeof ack === 'function' && ack({ ok: false, reason: 'forbidden' });
+      }
 
       handleReceiverExit(session, peerId, io);
       const peer = session.peers.get(peerId);
@@ -1649,11 +1728,6 @@ export function registerSocketHandlers(io) {
         if (sessionDownloadQueue) {
           sessionDownloadQueue.delete(peerId);
           if (sessionDownloadQueue.size === 0) store.receiverDownloadQueues.delete(sessionId);
-        }
-        const sessionDownloadFlags = store.receiverDownloadFlags.get(sessionId);
-        if (sessionDownloadFlags) {
-          sessionDownloadFlags.delete(peerId);
-          if (sessionDownloadFlags.size === 0) store.receiverDownloadFlags.delete(sessionId);
         }
         const sessionActive = store.receiverActiveDownloads.get(sessionId);
         if (sessionActive) {
@@ -1730,16 +1804,6 @@ export function registerSocketHandlers(io) {
                     store.receiverDownloadQueues.delete(sessionId);
                   }
                   logger.info(`Cleared download queue for disconnected peer ${peerId}`);
-                }
-
-                // Clear download flags for this peer
-                const sessionDownloadFlags = store.receiverDownloadFlags.get(sessionId);
-                if (sessionDownloadFlags) {
-                  sessionDownloadFlags.delete(peerId);
-                  if (sessionDownloadFlags.size === 0) {
-                    store.receiverDownloadFlags.delete(sessionId);
-                  }
-                  logger.info(`Cleared download flags for disconnected peer ${peerId}`);
                 }
               }
             }, 10000); // 10 second timeout

@@ -7,7 +7,6 @@ export function resetStoreForTests() {
   store.transferHistory.clear();
   store.recentTransfers.length = 0;
   store.receiverDownloadQueues.clear();
-  store.receiverDownloadFlags.clear();
   store.receiverActiveDownloads.clear();
   store.currentHostSessionId = null;
   resetPinRateLimitForTests();

@@ -19,14 +19,6 @@ export function isPeerOnSession(peer) {
   return getPeerPage(peer) === PeerPage.SESSION;
 }
 
-export function isPeerOnSend(peer) {
-  return getPeerPage(peer) === PeerPage.SEND;
-}
-
-export function isPeerOnReceive(peer) {
-  return getPeerPage(peer) === PeerPage.RECEIVE;
-}
-
 export function peersOnPage(session, pageKey) {
   return Array.from(session.peers.values()).filter(
     (p) => getPeerPage(p) === normalizePeerPage(pageKey) && !p.isDisconnected,

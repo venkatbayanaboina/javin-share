@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import os from 'os';
 
 export function getLocalIP() {
@@ -13,5 +14,6 @@ export function getLocalIP() {
 }
 
 export function generatePIN() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  // Cryptographically secure: the PIN is the only secret gating session join.
+  return crypto.randomInt(100000, 1000000).toString();
 }

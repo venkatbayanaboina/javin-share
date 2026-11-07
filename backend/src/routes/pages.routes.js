@@ -48,8 +48,20 @@ export function createPagesRouter() {
     res.sendFile(path.join(config.frontendPath, PAGE_FILES.ended));
   });
 
-  // Serve static assets (JS, CSS, images, PWA manifests) after custom page routes
-  router.use(express.static(config.frontendPath));
+  // Serve static assets (JS, CSS, images, PWA manifests) after custom page routes.
+  // Client-side caching: assets are versioned by the SW cache + manual edits,
+  // so a 1-hour maxAge removes the per-load revalidation round-trips.
+  router.use(
+    express.static(config.frontendPath, {
+      maxAge: '1h',
+      setHeaders(res, filePath) {
+        if (filePath.endsWith('sw.js')) {
+          // The service worker itself must always revalidate
+          res.setHeader('Cache-Control', 'no-cache');
+        }
+      },
+    }),
+  );
 
   return router;
 }

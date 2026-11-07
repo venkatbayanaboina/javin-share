@@ -3,20 +3,24 @@ export const store = {
   transferHistory: new Map(),
   recentTransfers: [],
   receiverDownloadQueues: new Map(),
-  receiverDownloadFlags: new Map(),
   receiverActiveDownloads: new Map(),
   currentHostSessionId: null,
   localIP: '127.0.0.1',
 };
 
-export function getSession(sessionId) {
-  return store.sessions.get(sessionId);
+const MAX_RECENT_TRANSFERS = 100;
+
+/**
+ * Append to recentTransfers with a hard cap, so the list cannot grow
+ * unbounded across long-running server lifetimes.
+ */
+export function pushRecentTransfer(entry) {
+  store.recentTransfers.push(entry);
+  if (store.recentTransfers.length > MAX_RECENT_TRANSFERS) {
+    store.recentTransfers.splice(0, store.recentTransfers.length - MAX_RECENT_TRANSFERS);
+  }
 }
 
 export function setCurrentHostSessionId(sessionId) {
   store.currentHostSessionId = sessionId;
-}
-
-export function getCurrentHostSessionId() {
-  return store.currentHostSessionId;
 }

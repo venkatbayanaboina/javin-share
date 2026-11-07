@@ -59,6 +59,15 @@ function invalidatePreviousSession(io) {
 }
 
 export async function createSession(io, forceInvalidatePrevious = false) {
+  // Drop the previous session when it has already expired — otherwise it
+  // would linger in the store forever (the reuse path no longer returns it).
+  const previous = store.currentHostSessionId
+    ? store.sessions.get(store.currentHostSessionId)
+    : null;
+  if (previous && Date.now() > previous.pinExpiry) {
+    invalidatePreviousSession(io);
+  }
+
   if (forceInvalidatePrevious && store.currentHostSessionId) {
     invalidatePreviousSession(io);
   }
@@ -84,7 +93,8 @@ export async function createSession(io, forceInvalidatePrevious = false) {
   const qrUrl = buildPinUrl(store.localIP);
   const localUrl = buildLocalUrl();
   const qrDataUrl = await QRCode.toDataURL(qrUrl);
-  logger.info(`Session created: ${sessionId}, PIN: ${pin}`);
+  // Never log the PIN in plaintext — logs can end up in CI output or issue reports.
+  logger.info(`Session created: ${sessionId}`);
 
   return { sessionId, pin, url: pinUrl, localUrl, qrDataUrl, pinExpiry: session.pinExpiry };
 }

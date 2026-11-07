@@ -122,6 +122,22 @@ export class TransferCoordinatorService {
       return res.status(404).json({ error: 'Session not found' });
     }
 
+    // Receiver authorization: download URLs are emitted in plaintext socket
+    // events (and can leak via browser history), so a receiver id alone must
+    // not grant access. The receiver must be a connected peer of this session
+    // or an accepted receiver of the active transfer.
+    if (receiverPeerId) {
+      const knownReceiver =
+        session.peers.has(receiverPeerId) ||
+        session.activeTransfer?.acceptedReceivers?.has(receiverPeerId);
+      if (!knownReceiver) {
+        logger.warn(
+          `Unauthorized download attempt for ${fileId} by unknown receiver ${receiverPeerId} in ${sessionId}`,
+        );
+        return res.status(403).json({ error: 'Receiver is not part of this session' });
+      }
+    }
+
     const strategy = this.resolveStrategy(fileId);
     logger.info(
       `🎯 Delegating download for file ${fileId} using strategy: ${strategy.constructor.name}`,
