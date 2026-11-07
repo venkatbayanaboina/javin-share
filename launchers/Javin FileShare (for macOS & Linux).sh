@@ -88,7 +88,6 @@ if [ -f "$SCRIPT_DIR/../.env" ]; then
   fi
 fi
 
-DISPLAY_HOST="$CUSTOM_HOST"
 
 echo "========================================"
 echo "    JAVIN FileShare Launcher"
