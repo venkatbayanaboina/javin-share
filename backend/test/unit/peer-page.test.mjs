@@ -13,8 +13,6 @@ describe('peer-page.service', () => {
     const peer = {};
     setPeerPage(peer, 'main');
     assert.equal(peer.page, PeerPage.SESSION);
-    assert.equal(peer.inMain, true);
-    assert.equal(peer.currentPage, 'main');
   });
 
   it('tracks peers on page', () => {

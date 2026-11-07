@@ -50,8 +50,11 @@ export const config = {
     // Opt-in: stream relay is off unless TRANSFER_ENABLE_STREAM_RELAY === 'true' (matches README + .env.example)
     enableStreamRelay: process.env.TRANSFER_ENABLE_STREAM_RELAY === 'true',
     streamRelayTimeoutMs: Number(process.env.TRANSFER_STREAM_RELAY_TIMEOUT_MS) || 30000,
-    chunkSizeBytes: Number(process.env.TRANSFER_CHUNK_SIZE_BYTES) || 8 * 1024 * 1024,
-    spoolThresholdBytes: Number(process.env.TRANSFER_SPOOL_THRESHOLD_BYTES) || 256 * 1024 * 1024,
+    // Per-receiver branch highWaterMark (name kept for env compatibility) —
+    // 1MB engages backpressure without multiplying RAM by receiver count.
+    chunkSizeBytes: Number(process.env.TRANSFER_CHUNK_SIZE_BYTES) || 1024 * 1024,
+    // Buffered strategy spills to disk beyond this to cap per-file RAM.
+    spoolThresholdBytes: Number(process.env.TRANSFER_SPOOL_THRESHOLD_BYTES) || 32 * 1024 * 1024,
     maxReceiverBufferSize:
       Number(process.env.TRANSFER_MAX_RECEIVER_BUFFER_SIZE) || 16 * 1024 * 1024,
     enableBufferedBackpressure: process.env.TRANSFER_ENABLE_BUFFERED_BACKPRESSURE === 'true',

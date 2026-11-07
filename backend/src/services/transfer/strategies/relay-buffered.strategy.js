@@ -198,9 +198,7 @@ export class RelayBufferedStrategy extends BaseStreamStrategy {
         this.activeSessions.delete(fileId);
         // Release the send lock — a failed upload must not leave the session
         // stuck in "transfer in progress" until a disconnect clears it.
-        session.activeTransfer = null;
-        session.currentSenderPeerId = null;
-        this.deps.io.in(session.id).emit('transfer-unlocked');
+        this.releaseTransferLock(session);
         if (!res.headersSent) res.status(500).json({ error: 'Upload buffered streaming failed' });
       });
     });
@@ -249,9 +247,7 @@ export class RelayBufferedStrategy extends BaseStreamStrategy {
       logger.error('Upload request stream error:', err);
       this.destroyAllBranches(streamSession);
       this.activeSessions.delete(fileId);
-      session.activeTransfer = null;
-      session.currentSenderPeerId = null;
-      this.deps.io.in(session.id).emit('transfer-unlocked');
+      this.releaseTransferLock(session);
     });
 
     req.pipe(busboy);

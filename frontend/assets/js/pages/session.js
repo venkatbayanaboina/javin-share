@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   window.addEventListener('popstate', blockBackNavigation, true);
   
-  window.addEventListener('beforeunload', function(e) {
+  window.addEventListener('beforeunload', function(_e) {
     const urlParams = new URLSearchParams(window.location.search);
     const role = urlParams.get('role');
     const sessionId = urlParams.get('session');
@@ -306,9 +306,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
       previousPeers = peers;
       
-      // Check if host is in main page
+      // Check if host is in main page (canonical field is `page`)
       const hostPeer = peers.find(p => p.role === 'host');
-      hostInMainPage = hostPeer !== undefined && (hostPeer.page === 'session' || hostPeer.isMainPage === true || hostPeer.inMain === true);
+      hostInMainPage = hostPeer !== undefined && hostPeer.page === 'session';
       
       const transferStatus = document.getElementById('transfer-status');
       if (hostInMainPage) {
@@ -551,7 +551,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
 
-    mainSocket.on('session-invalidated', (data) => {
+    mainSocket.on('session-invalidated', (_data) => {
       logToConsole('Session updated', 'error');
       alert('Session has been invalidated. The host created a new one.');
       window.location.href = role === 'host' ? '/' : `/session-ended.html?session=${sessionId}&role=${role}`;

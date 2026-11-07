@@ -79,6 +79,14 @@ if [ -z "$CUSTOM_HOST" ]; then
   echo "=> Configured standard local host: $CUSTOM_HOST"
 fi
 
+# Honor PORT from .env if present (launchers previously hardcoded 4000)
+if [ -f "$SCRIPT_DIR/../.env" ]; then
+  ENV_PORT=$(grep -E "^PORT=" "$SCRIPT_DIR/../.env" | cut -d'=' -f2- | tr -d '"\'\''\r' || echo "")
+  if [ -n "$ENV_PORT" ]; then
+    PORT="$ENV_PORT"
+  fi
+fi
+
 DISPLAY_HOST="$CUSTOM_HOST"
 URL="https://$DISPLAY_HOST:$PORT"
 
@@ -187,11 +195,11 @@ if [ ! -f "$SCRIPT_DIR/icon.png" ]; then
   echo
 fi
 
-# 8. Set up Linux desktop entry if on Linux
+# 8. Set up Linux desktop entry if on Linux (only outside the repo tree)
 if [[ "${OSTYPE:-}" != darwin* ]]; then
-  DESKTOP_FILE="$SCRIPT_DIR/Javin FileShare (for Linux).desktop"
   echo "=> Registering Linux Desktop Shortcuts..."
-  cat > "$DESKTOP_FILE" << EOF
+  install_desktop_entry() {
+    cat > "$1/Javin FileShare.desktop" << EOF
 [Desktop Entry]
 Version=1.0
 Type=Application
@@ -202,15 +210,14 @@ Icon=$SCRIPT_DIR/icon.png
 Terminal=true
 Categories=Network;FileTransfer;
 EOF
-  chmod +x "$DESKTOP_FILE"
-
+    chmod +x "$1/Javin FileShare.desktop"
+  }
   if [ -d "$HOME/.local/share/applications" ]; then
-    cp "$DESKTOP_FILE" "$HOME/.local/share/applications/Javin FileShare.desktop"
+    install_desktop_entry "$HOME/.local/share/applications"
   fi
   if [ -d "$HOME/Desktop" ]; then
-    cp "$DESKTOP_FILE" "$HOME/Desktop/Javin FileShare.desktop"
+    install_desktop_entry "$HOME/Desktop"
     gio set "$HOME/Desktop/Javin FileShare.desktop" metadata::trusted true 2>/dev/null || true
-    chmod +x "$HOME/Desktop/Javin FileShare.desktop"
   fi
   echo "=> ✓ Shortcuts created!"
   echo

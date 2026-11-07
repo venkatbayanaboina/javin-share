@@ -2,7 +2,9 @@ import { TransferStrategy } from './transfer-strategy.js';
 import { config } from '../../../config.js';
 import { logger } from '../../../logger.js';
 
-export const chunkHighWaterMark = () => config.transfer.chunkSizeBytes || 8 * 1024 * 1024;
+// Per-receiver branch buffer. 1MB is ample for LAN fan-out; the old 8MB default
+// multiplied receiver count by 8MB of buffered data before backpressure kicked in.
+export const chunkHighWaterMark = () => config.transfer.chunkSizeBytes || 1024 * 1024;
 
 export class BaseStreamSession {
   constructor(fileId, fileMetadata, expectedReceivers, senderSocketId) {
@@ -30,6 +32,16 @@ export class BaseStreamStrategy extends TransferStrategy {
   }
 
   /**
+   * Release the session send lock after a failed/aborted transfer so the
+   * session is not stuck in "transfer in progress" until a disconnect.
+   */
+  releaseTransferLock(session) {
+    session.activeTransfer = null;
+    session.currentSenderPeerId = null;
+    this.deps.io.in(session.id).emit('transfer-unlocked');
+  }
+
+  /**
    * Helper to trigger sender and receiver upload events.
    */
   triggerUpload(streamSession, session) {
@@ -49,9 +61,7 @@ export class BaseStreamStrategy extends TransferStrategy {
         reason: 'No receivers accepted and connected to download the file.',
       });
       this.activeSessions.delete(streamSession.fileId);
-      session.activeTransfer = null;
-      session.currentSenderPeerId = null;
-      this.deps.io.in(session.id).emit('transfer-unlocked');
+      this.releaseTransferLock(session);
       return;
     }
 
