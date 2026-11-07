@@ -219,6 +219,16 @@ Benchmarked on loopback (127.0.0.1) with a single receiver and a 10 GB payload �
 
 The streaming TTFB advantage appears on large payloads where disk-write finalization dominates; at small payloads (100 MB) the ordering reverses. Full methodology, the failure-mode simulations (resumable downloads, mid-stream disconnect cleanup, flat memory under 20 GB+ transfers), and the raw result log live in [docs/evaluation_of_architecture.md](docs/evaluation_of_architecture.md) and [docs/benchmarks/BASELINE.md](docs/benchmarks/BASELINE.md).
 
+### Getting the most out of your network (the real ceiling)
+
+Loopback numbers above are far beyond any Wi-Fi link — on a real LAN your access point, not this server, sets the limit. To approach the theoretical maximum:
+
+* **Benchmark the link first** with `iperf3` between the host and one client. The app should reach 85–95% of that number; if it doesn't, the network is the problem, not the transfer path.
+* **Prefer Ethernet for the host**, or 5/6 GHz Wi-Fi with wide channels. A Wi-Fi host relaying to Wi-Fi clients pays double airtime — direct client-to-client hops are faster in that setup.
+* **Disable AP/client isolation**, or devices cannot reach each other at all.
+* **Android senders/receivers**: keep the screen on during transfers (the app requests the Screen Wake Lock automatically); Wi-Fi power saving can otherwise cut throughput sharply.
+* **Linux hosts (optional)**: congestion control `bbr` (`sysctl net.ipv4.tcp_congestion_control=bbr`) improves behavior on lossy links.
+
 ---
 
 ## Security Model

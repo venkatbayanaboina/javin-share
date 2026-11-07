@@ -46,6 +46,12 @@ server.on('error', (err) => {
   process.exit(1);
 });
 
+// LAN transfer tuning: no Nagle delays on control/data sockets, and a
+// keep-alive window that comfortably outlives a browser's idle reuse gap.
+server.on('connection', (socket) => socket.setNoDelay(true));
+server.keepAliveTimeout = 65000;
+server.headersTimeout = 66000; // must exceed keepAliveTimeout
+
 const io = new Server(server, {
   // No CORS config: the app is same-origin (pages are served by this server),
   // and without permissive CORS headers a cross-site WebSocket hijack from a

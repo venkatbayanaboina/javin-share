@@ -1,4 +1,5 @@
 import '../core/index.js';
+import { keepAwake } from '../core/wake-lock.js';
 import {
   getPeerId,
   getDeviceName,
@@ -177,6 +178,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   setupSocket();
+  keepAwake();
 });
 
 

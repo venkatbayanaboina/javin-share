@@ -32,6 +32,7 @@ const STATIC_ASSETS = [
   '/assets/js/core/escape.js',
   '/assets/js/core/confirm.js',
   '/assets/js/core/grace-timer.js',
+  '/assets/js/core/wake-lock.js',
   '/assets/js/core/navigate.js',
   '/assets/js/core/pages.js',
   '/assets/js/socket/client.js',
