@@ -6,23 +6,13 @@ import {
   clearSessionExited,
   setRejoiningSession,
   getUrlParameter,
-  showError,
-  showNotification,
-  escapeHtml,
-  formatFileSize,
-  formatTime,
-  formatSpeed,
-  validateFile,
-  getDeviceInfo,
-  ErrorHandler,
-  ProgressTracker,
 } from '../core/index.js';
 import { mountPinCountdown } from '../core/grace-timer.js';
 
 // PIN entry logic for both QR and manual entry
 const pinForm = document.getElementById('pin-form');
 const pinInput = document.getElementById('pin-input');
-const deviceNameInput = document.getElementById('device-name-input');
+const deviceNameInput = document.getElementById('device-name');
 const connectBtn = document.getElementById('connect-btn');
 const errorDisplay = document.getElementById('error-message');
 const statusDisplay = document.getElementById('status-message');
@@ -58,7 +48,6 @@ function showStatus(message) {
 
 // Popup message functions
 function showPopupMessage(title, message, type = 'info') {
-  console.log('showPopupMessage:', { title, message, type });
   const popup = document.getElementById('popupMessage');
   const popupTitle = document.getElementById('popupTitle');
   const popupBody = document.getElementById('popupBody');
@@ -72,7 +61,6 @@ function showPopupMessage(title, message, type = 'info') {
 }
 
 function updatePopupMessage(title, message, type = 'info') {
-  console.log('updatePopupMessage:', { title, message, type });
   const popup = document.getElementById('popupMessage');
   const popupTitle = document.getElementById('popupTitle');
   const popupBody = document.getElementById('popupBody');
@@ -100,7 +88,6 @@ const role = getUrlParameter('role');
 
 // If we have a peerId, notify server that we're on PIN page (browser back scenario)
 if (peerId && role === 'client' && urlSessionId) {
-  console.log('PIN page: Browser back, notifying server');
   const pinSocket = io({ transports: ['websocket'] });
   pinSocket.on('connect', () => {
     pinSocket.emit('enter-pin-page', { sessionId: urlSessionId, peerId: peerId });
@@ -242,7 +229,6 @@ async function attemptConnection() {
       }, 10000);
       
       socket.on('connect', () => {
-        console.log('Socket connected, joining session...');
         const peerId = getPeerId();
         socket.emit('client-has-verified', { sessionId: currentSessionId });
         

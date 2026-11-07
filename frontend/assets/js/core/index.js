@@ -96,6 +96,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // Theme Toggle Button Logic
   const themeToggle = document.getElementById('theme-toggle');
   if (themeToggle) {
+    const updateThemeColorMeta = (isLight) => {
+      // Keep the browser chrome color in sync with the canvas
+      document
+        .querySelector('meta[name="theme-color"]')
+        ?.setAttribute('content', isLight ? '#eef2f9' : '#070d1a');
+    };
     const updateToggleIcon = () => {
       const isLight = document.documentElement.classList.contains('light-theme');
       themeToggle.innerHTML = isLight
@@ -103,6 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
         : '<svg class="icon"><use href="assets/icons.svg#sun"></use></svg>';
       themeToggle.title = isLight ? 'Switch to dark mode' : 'Switch to light mode';
       themeToggle.setAttribute('aria-label', themeToggle.title);
+      updateThemeColorMeta(isLight);
     };
     updateToggleIcon();
     themeToggle.addEventListener('click', () => {

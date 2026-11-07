@@ -1,4 +1,4 @@
-const CACHE_NAME = 'javin-fileshare-v3';
+const CACHE_NAME = 'javin-fileshare-v4';
 const STATIC_ASSETS = [
   '/',
   '/host.html',
@@ -11,7 +11,16 @@ const STATIC_ASSETS = [
   '/manifest.json',
   '/assets/icons.svg',
   '/assets/icon.png',
-  '/assets/css/main.css',
+  '/assets/icon-192.png',
+  '/assets/css/tokens.css',
+  '/assets/css/base.css',
+  '/assets/css/components.css',
+  '/assets/css/pages/host.css',
+  '/assets/css/pages/pin.css',
+  '/assets/css/pages/send.css',
+  '/assets/css/pages/receive.css',
+  '/assets/css/pages/session.css',
+  '/assets/css/pages/disconnected.css',
   '/assets/js/core/index.js',
   '/assets/js/core/storage.js',
   '/assets/js/core/format.js',
@@ -20,12 +29,19 @@ const STATIC_ASSETS = [
   '/assets/js/core/validation.js',
   '/assets/js/core/device.js',
   '/assets/js/core/errors.js',
+  '/assets/js/core/escape.js',
+  '/assets/js/core/confirm.js',
+  '/assets/js/core/grace-timer.js',
+  '/assets/js/core/navigate.js',
+  '/assets/js/core/pages.js',
   '/assets/js/socket/client.js',
   '/assets/js/pages/host.js',
   '/assets/js/pages/join-pin.js',
   '/assets/js/pages/session.js',
   '/assets/js/pages/send-files.js',
-  '/assets/js/pages/receive-files.js'
+  '/assets/js/pages/receive-files.js',
+  '/assets/js/pages/history.js',
+  '/assets/js/pages/session-ended.js'
 ];
 
 // Install Event - Pre-cache shell assets

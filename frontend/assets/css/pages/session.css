@@ -3,8 +3,13 @@
   font-family: var(--font-mono); font-size: var(--text-sm);
   line-height: 1.6; white-space: pre-wrap; word-break: break-word;
 }
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+}
 .action-grid button { min-height: 44px; }
 @media (max-width: 560px) {
-  .page-session .card[style*="grid-template-columns:repeat(3"] { grid-template-columns: 1fr !important; }
+  .stats-grid { grid-template-columns: 1fr; }
   .action-grid { grid-template-columns: 1fr !important; }
 }

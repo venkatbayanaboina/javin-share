@@ -4,10 +4,16 @@
   "description": "High-performance, secure local network file sharing",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f4f6fb",
-  "theme_color": "#2563eb",
+  "background_color": "#070d1a",
+  "theme_color": "#070d1a",
   "orientation": "any",
   "icons": [
+    {
+      "src": "/assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "/assets/icon.png",
       "sizes": "512x512",

@@ -8,7 +8,10 @@
   <meta name="theme-color" content="#0b1220" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="stylesheet" href="assets/css/main.css" />
+  <link rel="stylesheet" href="assets/css/tokens.css" />
+  <link rel="stylesheet" href="assets/css/base.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/pages/send.css" />
   <script>
     (function() {
       const t = localStorage.getItem('theme');
@@ -24,7 +27,7 @@
 
     <header class="app-header rise">
       <a class="app-brand" href="/" style="text-decoration:none">
-        <span class="app-brand-icon"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></span>
+        <span class="app-brand-icon"><svg class="icon"><use href="assets/icons.svg#logo"/></svg></span>
         JAVIN FileShare
       </a>
       <div class="app-header-actions">

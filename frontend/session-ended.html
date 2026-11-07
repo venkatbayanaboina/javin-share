@@ -6,7 +6,10 @@
   <title>JAVIN FileShare — Session Ended</title>
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#0b1220" />
-  <link rel="stylesheet" href="assets/css/main.css" />
+  <link rel="stylesheet" href="assets/css/tokens.css" />
+  <link rel="stylesheet" href="assets/css/base.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/pages/disconnected.css" />
 </head>
 <body class="page-disconnected">
   <div class="wrap wrap-narrow" style="min-height:70vh;display:flex;align-items:center;justify-content:center">
@@ -23,8 +26,6 @@
         <div style="display:flex;justify-content:space-between;font-size:var(--text-sm)"><span class="muted">Total data</span> <strong id="stat-data">—</strong></div>
         <div style="display:flex;justify-content:space-between;font-size:var(--text-sm)"><span class="muted">Duration</span> <strong id="stat-duration">—</strong></div>
       </div>
-      <!-- Legacy table for JS compatibility (hidden, JS may still reference .metrics-table) -->
-      <table class="metrics-table is-hidden" aria-hidden="true"><tbody><tr><td id="stat-nodes-alt"></td></tr></tbody></table>
 
       <div style="display:flex;flex-direction:column;gap:10px;width:100%">
         <button type="button" id="init-btn" class="btn-primary btn-block">Start new session</button>

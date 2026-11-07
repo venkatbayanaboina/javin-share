@@ -11,13 +11,6 @@ import {
   showError,
   showNotification,
   escapeHtml,
-  formatFileSize,
-  formatTime,
-  formatSpeed,
-  validateFile,
-  getDeviceInfo,
-  ErrorHandler,
-  ProgressTracker,
 } from '../core/index.js';
 
 async function copyTextToClipboard(text) {
@@ -96,17 +89,12 @@ async function copyTextToClipboard(text) {
           return;
         }
       }
-      if (!window.FileShareUtils) {
-        document.body.innerHTML = `<div class='container'><div class='error'><h2>Critical Error</h2><p>Core script (script.js) failed to load. Please refresh the page.</p></div></div>`;
-        return;
-      }
 
       const { getPeerId, showError, showNotification } = window.FileShareUtils;
 
       let hostSocket;
       let sessionData = null;
       const peerId = getPeerId();
-      let pinTimerInterval;
       let nonHostCount = 0;
       let lastClientSeenAt = 0;
       let isRestoringGraceTimer = false;
@@ -114,8 +102,6 @@ async function copyTextToClipboard(text) {
       async function init() {
         try {
           // Clear any old session data when starting fresh
-          console.log('=== INIT FUNCTION CALLED ===');
-          console.log('Clearing old session data...');
           
           clearAllExitedFlags();
           
@@ -150,27 +136,15 @@ async function copyTextToClipboard(text) {
           }
           sessionData = await resp.json();
           
-          console.log('=== BACKEND RESPONSE DEBUG ===');
-          console.log('Response URL:', url);
-          console.log('Response status:', resp.status);
-          console.log('Session data:', sessionData);
-          
           // Check if this is a new session or existing session
           if (url.includes('forceNew=1')) {
-            console.log('🆕 NEW SESSION CREATED (forceNew=1)');
             // Don't start grace timer until a client actually joins
-            console.log('New session created - waiting for clients to join before starting grace timer');
           } else if (url.includes('refresh=1')) {
-            console.log('🔄 EXISTING SESSION REUSED (refresh=1)');
           } else if (url.includes('session=')) {
-            console.log('📋 SPECIFIC SESSION REQUESTED');
           } else {
-            console.log('❓ UNKNOWN SESSION REQUEST TYPE');
           }
           
           // Connect to socket immediately so we can receive grace timer events
-          console.log('Connecting to socket immediately for grace timer events');
-          console.log('New session ID:', sessionData.sessionId);
           setupSocket(sessionData.sessionId);
           
           // Restore grace UI from server state after refresh (no localStorage)
@@ -190,22 +164,13 @@ async function copyTextToClipboard(text) {
           const isRefresh = performance?.navigation?.type === performance?.navigation?.TYPE_RELOAD;
           const forceNew = urlParams.get('forceNew') === '1';
           
-          console.log('=== DEVICE NAME CHECK DEBUG ===');
-          console.log('Existing device name:', existingDeviceName);
-          console.log('Is refresh:', isRefresh);
-          console.log('Force new:', forceNew);
-          console.log('URL params:', window.location.search);
-          
           if (existingDeviceName) {
             // Device name exists - always reuse it (regardless of forceNew)
-            console.log('✅ Device name found locally:', existingDeviceName);
-            console.log('✅ Reusing existing device name - going directly to session');
             document.getElementById("loading").style.display = "none";
             // Join session immediately with existing device name
             joinSessionWithDeviceName(sessionData.sessionId, existingDeviceName);
           } else {
             // No device name - show input form
-            console.log('❌ No device name found - showing device name input');
             document.getElementById("loading").style.display = "none";
             document.getElementById("device-name-section").style.display = "block";
           }
@@ -217,7 +182,6 @@ async function copyTextToClipboard(text) {
       
       // Function to join session with existing device name
       function joinSessionWithDeviceName(sessionId, deviceName) {
-        console.log('Joining session with existing device name:', deviceName);
         // Store device name if not already stored
         setDeviceName(deviceName);
         
@@ -225,7 +189,6 @@ async function copyTextToClipboard(text) {
         if (hostSocket && hostSocket.connected) {
           hostSocket.emit('update-device-name', { sessionId, deviceName });
         } else {
-          console.log('Socket not connected yet, device name will be updated when connected');
         }
         
         // Display the session
@@ -305,13 +268,10 @@ async function copyTextToClipboard(text) {
           if (button && button.disabled) {
             button.disabled = false;
             button.textContent = 'Extend 30s';
-            console.log('Extend button timeout - re-enabled');
           }
         }, 10000);
       }
       function setupSocket(sessionId) {
-        console.log('=== SETUP SOCKET CALLED ===');
-        console.log('Session ID:', sessionId);
         hostSocket = io({ transports: ['websocket'] });
 
         registerNavigateListener(hostSocket, {
@@ -336,10 +296,8 @@ async function copyTextToClipboard(text) {
         });
         
         // Register event handlers IMMEDIATELY to avoid race conditions
-        console.log('Registering event handlers immediately...');
         
         hostSocket.on('start-host-redirect-countdown', (data) => {
-          console.log('Grace countdown from server:', data);
           applyGraceCountdown(data);
           const extendBtn = document.getElementById('extend-btn');
           if (extendBtn) {
@@ -349,20 +307,12 @@ async function copyTextToClipboard(text) {
           /* Grace countdown is shown in the host UI — no toast spam */
         });
         hostSocket.on('grace-timer-cleared', () => {
-          console.log('Grace timer cleared by server');
           window.graceController?.stop();
           window.graceController = null;
         });
 
         // Handle server shutdown
         hostSocket.on('server-shutdown', () => {
-          console.log('Server is shutting down - stopping all timers');
-          
-          // Stop PIN timer
-          if (pinTimerInterval) {
-            clearInterval(pinTimerInterval);
-            pinTimerInterval = null;
-          }
           
           window.graceController?.stop();
           window.graceController = null;
@@ -395,13 +345,6 @@ async function copyTextToClipboard(text) {
 
         // Handle session ended
         hostSocket.on('session-ended', () => {
-          console.log('Session ended - stopping all timers');
-          
-          // Stop PIN timer
-          if (pinTimerInterval) {
-            clearInterval(pinTimerInterval);
-            pinTimerInterval = null;
-          }
           
           window.graceController?.stop();
           window.graceController = null;
@@ -432,13 +375,6 @@ async function copyTextToClipboard(text) {
         
         // Handle socket disconnect (server shutdown)
         hostSocket.on('disconnect', () => {
-          console.log('Socket disconnected - server may have shut down');
-          
-          // Stop PIN timer
-          if (pinTimerInterval) {
-            clearInterval(pinTimerInterval);
-            pinTimerInterval = null;
-          }
           
           window.graceController?.stop();
           window.graceController = null;
@@ -461,40 +397,23 @@ async function copyTextToClipboard(text) {
 
         // Confirm when host successfully joins session
         hostSocket.on("session-joined", (data) => {
-          console.log('🎯 HOST SESSION JOINED CONFIRMED');
-          console.log('Session join data:', data);
-          console.log('Socket ID:', hostSocket.id);
-          console.log('Session ID:', sessionData?.sessionId);
         });
         
         hostSocket.on("connect", () => {
-          console.log('🎯 HOST SOCKET CONNECTED');
-          console.log('Socket ID:', hostSocket.id);
-          console.log('Socket connected:', hostSocket.connected);
-          console.log('Ready to receive grace timer events');
-          console.log('About to join session:', sessionId);
           
           // Join session immediately to receive grace timer events
           const deviceName = getDeviceName() || 'Host Device';
-          console.log('Joining session immediately with device name:', deviceName);
           hostSocket.emit('join-session', { 
             sessionId, 
             role: 'host', 
             peerId, 
             deviceName 
           });
-          console.log('Join session event emitted');
           
           // Debug: Check if we can receive events
-          console.log('🎯 SOCKET CONNECTION DEBUG:');
-          console.log('Socket connected:', hostSocket.connected);
-          console.log('Socket ID:', hostSocket.id);
-          console.log('Grace controls element exists:', document.getElementById('grace-controls'));
-          console.log('Grace countdown element exists:', document.getElementById('grace-countdown'));
         });
         
         hostSocket.on("disconnect", () => {
-          console.log('=== HOST SOCKET DISCONNECTED ===');
         });
         
         hostSocket.on("connect_error", (error) => {
@@ -503,7 +422,6 @@ async function copyTextToClipboard(text) {
 
         // Handle host-go-now response
         hostSocket.on("host-go-now-response", (data) => {
-          console.log('Host go now response received:', data);
           if (data && data.ok) {
             showNotification("Redirecting to main page...", "success");
             // The backend emits navigate after this
@@ -514,7 +432,6 @@ async function copyTextToClipboard(text) {
         
         // Handle host-extend-redirect response
         hostSocket.on("host-extend-redirect-response", (data) => {
-          console.log('Host extend redirect response received:', data);
           if (data && data.ok) {
             showNotification("Grace period extended by 30 seconds!", "success");
             // Re-enable the extend button
@@ -540,7 +457,6 @@ async function copyTextToClipboard(text) {
 
         let previousClients = [];
         hostSocket.on("peers-updated", (peers) => {
-          console.log('Host received peers-updated:', peers);
           const clients = peers.filter(p => p.role !== "host");
           const clientCount = clients.length;
           nonHostCount = clientCount;
@@ -601,7 +517,6 @@ async function copyTextToClipboard(text) {
         
         // Handle response timer events
         hostSocket.on('response-timer-started', (data) => {
-          console.log('Response timer started:', data);
           const timerContainer = document.getElementById('response-timer');
           const countdownElement = document.getElementById('countdown');
           const responseCountElement = document.getElementById('response-count');
@@ -632,7 +547,6 @@ async function copyTextToClipboard(text) {
         });
         
         hostSocket.on('response-count-updated', (data) => {
-          console.log('Response count updated:', data);
           const responseCountElement = document.getElementById('response-count');
           responseCountElement.textContent = data.totalResponses;
           
@@ -652,19 +566,15 @@ async function copyTextToClipboard(text) {
 
         // If sender cancels or exits, return host to main page
         hostSocket.on('return-all-to-main', () => {
-          console.log('Host: Returning to main page due to sender cancellation');
           window.location.href = `/session.html?session=${sessionData?.sessionId}&role=host`;
         });
 
         // When transfer is unlocked (completed, timed out, etc.), return host to main only if they have clients
         hostSocket.on('transfer-unlocked', () => {
-          console.log('Host: Transfer unlocked');
           // Only redirect if there are clients connected (nonHostCount > 0)
           if (nonHostCount > 0) {
-            console.log('Host: Transfer unlocked, returning to main page');
             window.location.href = `/session.html?session=${sessionData?.sessionId}&role=host`;
           } else {
-            console.log('Host: Transfer unlocked but no clients connected, staying on index page');
           }
         });
       }
@@ -708,10 +618,6 @@ async function copyTextToClipboard(text) {
 
       // Host controls: go now or extend grace period
       document.getElementById('go-now-btn').addEventListener('click', () => {
-        console.log('Go to Main button clicked');
-        console.log('nonHostCount:', nonHostCount);
-        console.log('hostSocket connected:', hostSocket?.connected);
-        console.log('sessionData:', sessionData);
         
         // Check if socket is connected
         if (!hostSocket || !hostSocket.connected) {
@@ -736,9 +642,7 @@ async function copyTextToClipboard(text) {
         goNowBtn.textContent = 'Redirecting...';
         
         try { 
-          console.log('Emitting host-go-now with sessionId:', sessionData.sessionId);
           hostSocket.emit('host-go-now', { sessionId: sessionData.sessionId }, (ack) => {
-            console.log('host-go-now response:', ack);
             if (!ack || !ack.ok) {
               showNotification(ack?.message || 'No clients connected yet. Please wait.', 'warning');
               // Re-enable button on failure
@@ -755,9 +659,6 @@ async function copyTextToClipboard(text) {
         }
       });
       document.getElementById('extend-btn').addEventListener('click', () => {
-        console.log('Extend button clicked');
-        console.log('hostSocket connected:', hostSocket?.connected);
-        console.log('sessionData:', sessionData);
         
         // Check if socket is connected
         if (!hostSocket || !hostSocket.connected) {
@@ -786,9 +687,7 @@ async function copyTextToClipboard(text) {
         extendButtonTimeout(extendBtn);
         
         try { 
-          console.log('Emitting host-extend-redirect with sessionId:', sessionData.sessionId);
           hostSocket.emit('host-extend-redirect', { sessionId: sessionData.sessionId }, (ack) => {
-            console.log('host-extend-redirect response:', ack);
             if (!ack || !ack.ok) {
               showNotification(ack?.message || 'Failed to extend grace period', 'error');
               // Re-enable button on failure
@@ -852,19 +751,11 @@ async function copyTextToClipboard(text) {
         
                                     // Update device name in session (host is already joined)
           if (hostSocket && hostSocket.connected) {
-            console.log('Updating device name in session:', deviceName);
             hostSocket.emit("update-device-name", { 
               sessionId: sessionData.sessionId, 
               deviceName: deviceName 
             });
             
-            // Check if there's a pending grace timer to replay
-            if (window.pendingGraceTimer) {
-              console.log('Replaying pending grace timer after updating device name:', window.pendingGraceTimer);
-              const { durationSeconds, sessionId } = window.pendingGraceTimer;
-              window.startGraceTimer(durationSeconds, sessionId);
-              delete window.pendingGraceTimer;
-            }
           } else {
             console.error('Socket not connected when trying to update device name');
           }
@@ -885,8 +776,6 @@ async function copyTextToClipboard(text) {
       });
 
       // Debug: Check if grace controls exist and test their display
-      console.log('Grace controls element exists:', document.getElementById('grace-controls'));
-      console.log('Grace countdown element exists:', document.getElementById('grace-countdown'));
       
 
       

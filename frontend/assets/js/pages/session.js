@@ -6,7 +6,6 @@ import {
   hasExitedSession,
   clearSessionExited,
   getUrlParameter,
-  showError,
   showNotification,
   setPageStatus,
   escapeHtml,
@@ -27,18 +26,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Comprehensive client-side guard to prevent direct navigation
-  console.log('🔒 Setting up back navigation blocking...');
   let backNavigationBlocked = false;
   
   try {
     window.history.pushState(null, null, window.location.href);
-    console.log('      History state pushed successfully');
   } catch (e) {
     console.error('      Failed to push history state:', e);
   }
   
   function blockBackNavigation(event) {
-    console.log('🚫 Back navigation attempt detected!');
     if (!backNavigationBlocked) {
       backNavigationBlocked = true;
       event.preventDefault();
@@ -289,9 +285,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       const otherDeviceCount = otherPeers.length;
       const hadClient = previousPeers.some(p => p.role === 'client' && !p.isDisconnected);
       
-      const statusSpan = document.getElementById('devicesStatus').querySelector('span');
-      if (statusSpan) {
-        statusSpan.textContent = `${totalDevices} connected`;
+      // #devicesStatus is itself the pill element (no inner span)
+      const statusEl = document.getElementById('devicesStatus');
+      if (statusEl) {
+        statusEl.textContent = `${totalDevices} connected`;
       }
       
       // Update ASCII map
@@ -484,7 +481,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     mainSocket.on('transfer-unlocked', () => {
       logToConsole('CHANNEL UNLOCKED: TRANSFERS IDLE', 'success');
       const transferStatus = document.getElementById('transfer-status');
-      transferStatus.className = 'status-message status-success';
+      // Keep the element's banner classes — only reveal it (was styled away by
+      // overwriting className with nonexistent status-message classes).
+      transferStatus.classList.remove('is-hidden');
       document.getElementById('response-timer').style.display = 'none';
       
       if (hostInMainPage) {

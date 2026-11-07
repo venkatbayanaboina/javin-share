@@ -28,7 +28,6 @@ export async function initPinPageSocket(role = 'client') {
     });
 
     new ConnectionMonitor(socket).onStatusChange((status) => {
-      console.log('Connection status:', status);
     });
 
     return socket;
@@ -36,13 +35,4 @@ export async function initPinPageSocket(role = 'client') {
     ErrorHandler.handle(err, 'Socket Init', () => initPinPageSocket(role));
     return null;
   }
-}
-
-export function createPageSocket({ query = {}, onConnect } = {}) {
-  const pageSocket = io({ query, transports: ['websocket'] });
-  registerNavigateListener(pageSocket);
-  if (onConnect) {
-    pageSocket.on('connect', onConnect);
-  }
-  return pageSocket;
 }

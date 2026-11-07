@@ -1,5 +1,7 @@
 /* ============================================================
    JAVIN FileShare — Design Tokens (single source of truth)
+   Style: glassmorphism — frosted translucent panels over a
+   vibrant aurora canvas, with a per-theme glass layer.
    Themes: :root = dark · html.light-theme = light
    Mechanism unchanged: html.light-theme class toggled by
    existing inline script + #theme-toggle handler.
@@ -8,58 +10,70 @@
 :root {
   color-scheme: dark;
 
-  /* ── Canvas & surfaces ── */
-  --bg:               #0b1220;
-  --bg-accent:        radial-gradient(1200px 600px at 50% -10%, rgba(59, 130, 246, 0.07), transparent 60%);
-  --surface:          #111a2c;
-  --surface-2:        #16203a;
-  --surface-inset:    rgba(255, 255, 255, 0.04);
-  --overlay:          rgba(4, 9, 20, 0.66);
+  /* ── Canvas & aurora background ── */
+  --bg:               #070d1a;
+  --bg-accent:
+    radial-gradient(900px 520px at 12% -8%, rgba(59, 130, 246, 0.20), transparent 62%),
+    radial-gradient(820px 500px at 108% 18%, rgba(139, 92, 246, 0.16), transparent 58%),
+    radial-gradient(760px 520px at 50% 118%, rgba(34, 211, 238, 0.12), transparent 60%);
+  --surface:          var(--glass-bg);
+  --surface-2:        var(--glass-bg-strong);
+  --surface-inset:    rgba(255, 255, 255, 0.05);
+  --overlay:          rgba(4, 9, 20, 0.44);
+
+  /* ── Glass layer ── */
+  --glass-blur:       18px;
+  --glass-saturate:   160%;
+  --glass-bg:         rgba(255, 255, 255, 0.07);
+  --glass-bg-strong:  rgba(255, 255, 255, 0.10);
+  --glass-border:     rgba(255, 255, 255, 0.14);
+  --glass-highlight:  inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --surface-solid:    #101a2e; /* opaque fallback when backdrop-filter is unsupported */
 
   /* ── Borders ── */
-  --border:           rgba(148, 163, 184, 0.16);
-  --border-strong:    rgba(148, 163, 184, 0.30);
-  --border-subtle:    rgba(148, 163, 184, 0.10);
+  --border:           var(--glass-border);
+  --border-strong:    rgba(255, 255, 255, 0.24);
+  --border-subtle:    rgba(255, 255, 255, 0.08);
 
   /* ── Text ── */
   --text-1:           #f1f5f9;
-  --text-2:           #a3b0c2;
-  --text-3:           #64748b;
+  --text-2:           #b9c5d6;
+  --text-3:           #8494ab;
 
   /* ── Brand & semantic ── */
   --primary:          #3b82f6;
   --primary-strong:   #2563eb;
   --primary-contrast: #ffffff;
-  --primary-soft:     rgba(59, 130, 246, 0.14);
-  --primary-border:   rgba(59, 130, 246, 0.38);
+  --primary-soft:     rgba(59, 130, 246, 0.16);
+  --primary-border:   rgba(59, 130, 246, 0.42);
 
   --success:          #34d399;
   --success-strong:   #10b981;
-  --success-soft:     rgba(52, 211, 153, 0.13);
-  --success-border:   rgba(52, 211, 153, 0.35);
+  --success-soft:     rgba(52, 211, 153, 0.14);
+  --success-border:   rgba(52, 211, 153, 0.38);
 
   --warning:          #fbbf24;
   --warning-strong:   #d97706;
-  --warning-soft:     rgba(251, 191, 36, 0.12);
-  --warning-border:   rgba(251, 191, 36, 0.35);
+  --warning-soft:     rgba(251, 191, 36, 0.14);
+  --warning-border:   rgba(251, 191, 36, 0.38);
 
   --danger:           #f87171;
   --danger-strong:    #ef4444;
-  --danger-soft:      rgba(248, 113, 113, 0.12);
-  --danger-border:    rgba(248, 113, 113, 0.35);
+  --danger-soft:      rgba(248, 113, 113, 0.14);
+  --danger-border:    rgba(248, 113, 113, 0.38);
 
-  --ring:             rgba(59, 130, 246, 0.45);
+  --ring:             rgba(96, 165, 250, 0.55);
 
   /* ── Inputs ── */
-  --input-bg:         rgba(255, 255, 255, 0.05);
-  --input-border:     rgba(148, 163, 184, 0.22);
+  --input-bg:         rgba(255, 255, 255, 0.06);
+  --input-border:     rgba(255, 255, 255, 0.16);
   --input-text:       var(--text-1);
-  --input-placeholder:#5b6b81;
+  --input-placeholder:#7c8ca4;
 
-  /* ── Elevation ── */
-  --shadow-sm:        0 1px 2px rgba(0, 0, 0, 0.24);
-  --shadow-md:        0 4px 16px rgba(0, 0, 0, 0.32);
-  --shadow-lg:        0 16px 48px rgba(0, 0, 0, 0.44);
+  /* ── Elevation (tinted, soft, layered) ── */
+  --shadow-sm:        0 1px 2px rgba(2, 6, 16, 0.28);
+  --shadow-md:        0 8px 32px rgba(2, 6, 16, 0.36);
+  --shadow-lg:        0 24px 64px rgba(2, 6, 16, 0.48);
 
   /* ── Typography ── */
   --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -72,6 +86,7 @@
   --text-lg:   1.125rem;   /* 18px */
   --text-xl:   1.375rem;   /* 22px */
   --text-2xl:  1.75rem;    /* 28px */
+  --text-3xl:  2.25rem;    /* 36px — hero display */
 
   /* ── Spacing (4px scale) ── */
   --space-1:  4px;
@@ -85,9 +100,9 @@
   --space-12: 48px;
 
   /* ── Radius & motion ── */
-  --radius-sm:   8px;
-  --radius:      12px;
-  --radius-lg:   16px;
+  --radius-sm:   10px;
+  --radius:      14px;
+  --radius-lg:   20px;
   --radius-full: 999px;
 
   --transition:      160ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -117,34 +132,46 @@
 html.light-theme {
   color-scheme: light;
 
-  /* ── Canvas & surfaces ── */
-  --bg:               #f4f6fb;
-  --bg-accent:        radial-gradient(1200px 600px at 50% -10%, rgba(59, 130, 246, 0.06), transparent 60%);
-  --surface:          #ffffff;
-  --surface-2:        #f8fafc;
+  /* ── Canvas & aurora background ── */
+  --bg:               #eef2f9;
+  --bg-accent:
+    radial-gradient(900px 520px at 12% -8%, rgba(59, 130, 246, 0.14), transparent 62%),
+    radial-gradient(820px 500px at 108% 18%, rgba(139, 92, 246, 0.10), transparent 58%),
+    radial-gradient(760px 520px at 50% 118%, rgba(14, 165, 233, 0.08), transparent 60%);
+  --surface:          var(--glass-bg);
+  --surface-2:        var(--glass-bg-strong);
   --surface-inset:    rgba(15, 23, 42, 0.04);
-  --overlay:          rgba(15, 23, 42, 0.42);
+  --overlay:          rgba(15, 23, 42, 0.34);
+
+  /* ── Glass layer ── */
+  --glass-blur:       18px;
+  --glass-saturate:   160%;
+  --glass-bg:         rgba(255, 255, 255, 0.60);
+  --glass-bg-strong:  rgba(255, 255, 255, 0.76);
+  --glass-border:     rgba(15, 23, 42, 0.08);
+  --glass-highlight:  inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  --surface-solid:    #ffffff; /* opaque fallback when backdrop-filter is unsupported */
 
   /* ── Borders ── */
-  --border:           rgba(15, 23, 42, 0.10);
+  --border:           var(--glass-border);
   --border-strong:    rgba(15, 23, 42, 0.18);
   --border-subtle:    rgba(15, 23, 42, 0.06);
 
   /* ── Text ── */
   --text-1:           #0f172a;
-  --text-2:           #475569;
-  --text-3:           #94a3b8;
+  --text-2:           #3f4c5f;
+  --text-3:           #5b6b81;
 
   /* ── Brand & semantic ── */
   --primary:          #2563eb;
   --primary-strong:   #1d4ed8;
   --primary-contrast: #ffffff;
-  --primary-soft:     rgba(37, 99, 235, 0.09);
+  --primary-soft:     rgba(37, 99, 235, 0.10);
   --primary-border:   rgba(37, 99, 235, 0.32);
 
   --success:          #059669;
   --success-strong:   #047857;
-  --success-soft:     rgba(5, 150, 105, 0.09);
+  --success-soft:     rgba(5, 150, 105, 0.10);
   --success-border:   rgba(5, 150, 105, 0.30);
 
   --warning:          #b45309;
@@ -157,16 +184,16 @@ html.light-theme {
   --danger-soft:      rgba(220, 38, 38, 0.08);
   --danger-border:    rgba(220, 38, 38, 0.28);
 
-  --ring:             rgba(37, 99, 235, 0.35);
+  --ring:             rgba(37, 99, 235, 0.38);
 
   /* ── Inputs ── */
-  --input-bg:         #ffffff;
-  --input-border:     rgba(15, 23, 42, 0.16);
+  --input-bg:         rgba(255, 255, 255, 0.72);
+  --input-border:     rgba(15, 23, 42, 0.14);
   --input-text:       var(--text-1);
-  --input-placeholder:#94a3b8;
+  --input-placeholder:#7b8aa0;
 
   /* ── Elevation ── */
-  --shadow-sm:        0 1px 2px rgba(15, 23, 42, 0.05);
-  --shadow-md:        0 4px 16px rgba(15, 23, 42, 0.07);
-  --shadow-lg:        0 16px 48px rgba(15, 23, 42, 0.12);
+  --shadow-sm:        0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-md:        0 8px 32px rgba(15, 23, 42, 0.10);
+  --shadow-lg:        0 24px 64px rgba(15, 23, 42, 0.16);
 }
