@@ -98,5 +98,6 @@ If customHost <> "" Then
     displayHost = customHost
 End If
 
-' 7. Open browser to custom host to ensure secure connection and PWA support
-objShell.Run "cmd.exe /c start https://" & displayHost & ":4000", 0, False
+' 7. Open browser on the host machine via localhost (no mDNS dependency).
+' The custom host (displayHost) is reserved for devices joining via the QR code.
+objShell.Run "cmd.exe /c start https://localhost:4000", 0, False

@@ -87,9 +87,9 @@ echo "    JAVIN FileShare Launcher"
 echo "========================================"
 echo "=> Detected IP: $DEVICE_IP"
 if [ -n "$CUSTOM_HOST" ]; then
-  echo "=> Custom Host: $CUSTOM_HOST"
+  echo "=> Custom Host: $CUSTOM_HOST (for devices joining via QR)"
 fi
-echo "=> Target URL:  $URL"
+echo "=> This machine opens: https://localhost:$PORT"
 echo "========================================"
 echo
 
@@ -227,12 +227,37 @@ cleanup() {
 }
 trap cleanup EXIT
 
-sleep 2
-echo "=> Opening browser to secure link..."
+# Wait until the server actually accepts connections (up to ~15s) before
+# opening the browser, and fail clearly if it dies (e.g. port already in use).
+server_ready=false
+for _ in $(seq 1 30); do
+  if ! kill -0 "$SERVER_PID" 2>/dev/null; then
+    echo "❌ Server failed to start (is another instance already running on port $PORT?)"
+    exit 1
+  fi
+  if command -v curl >/dev/null 2>&1; then
+    curl -sk -o /dev/null "https://localhost:$PORT/api/v1/health" && server_ready=true && break
+  elif command -v nc >/dev/null 2>&1; then
+    nc -z localhost "$PORT" 2>/dev/null && server_ready=true && break
+  else
+    # No probe tool available; fall back to a fixed wait
+    sleep 2
+    server_ready=true
+    break
+  fi
+  sleep 0.5
+done
+
+if [ "$server_ready" != true ]; then
+  echo "❌ Server did not become ready within 15 seconds."
+  exit 1
+fi
+
+echo "=> Opening browser on this machine (localhost)..."
 if command -v open >/dev/null 2>&1; then
-  open "$URL"
+  open "https://localhost:$PORT"
 elif command -v xdg-open >/dev/null 2>&1; then
-  xdg-open "$URL"
+  xdg-open "https://localhost:$PORT"
 fi
 
 # Wait for server shutdown (e.g. host exit session)
