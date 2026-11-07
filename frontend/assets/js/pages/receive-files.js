@@ -24,7 +24,6 @@ let receiveSocket;
 let offeredFile = null;
 let downloadActive = false;
 let downloadCompleted = false;
-let consoleBody = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
   if (!window.FileShareUtils) {
@@ -93,22 +92,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  // Collapsible Console
-  const toggleConsoleBtn = document.getElementById('toggle-console-btn');
-  consoleBody = document.getElementById('console-body');
-  const toggleConsoleText = document.getElementById('toggle-console-text');
-
-  if (toggleConsoleBtn && consoleBody) {
-    toggleConsoleBtn.addEventListener('click', () => {
-      const isHidden = consoleBody.style.display === 'none';
-      consoleBody.style.display = isHidden ? 'block' : 'none';
-      toggleConsoleText.textContent = isHidden ? '[ HIDE ]' : '[ SHOW ]';
-    });
-  }
-
   document.getElementById("accept-btn").addEventListener("click", () => {
     if (!offeredFile) return;
-    logToConsole('Accepting file', 'success');
     receiveSocket.emit("accept-file", { sessionId, fileId: offeredFile.id, receiverPeerId: peerId });
     
     // Hide drawer and wait
@@ -129,7 +114,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById("reject-btn").addEventListener("click", () => {
     if (!offeredFile) return;
-    logToConsole('Declining file', 'error');
     receiveSocket.emit("reject-file", { sessionId, fileId: offeredFile.id, receiverPeerId: peerId });
     offeredFile = null;
     setPageState(1);
@@ -142,7 +126,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   document.getElementById('cancel-download').addEventListener('click', () => {
-    logToConsole('USER CANCELLED DOWNLOAD PROCESS', 'error');
     window.location.href = `/session.html?session=${sessionId}&role=${role}`;
   });
 
@@ -197,23 +180,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 
-
-function logToConsole(message, type = 'info') {
-  if (!consoleBody) return;
-  const time = new Date().toTimeString().split(' ')[0];
-  const colorMap = {
-    info: 'var(--primary)',
-    success: 'var(--success)',
-    warning: 'var(--warning)',
-    error: 'var(--danger)'
-  };
-  const color = colorMap[type] || 'var(--text-1)';
-  const logRow = document.createElement('div');
-  logRow.style.color = color;
-  logRow.innerHTML = `<span style="color: var(--text-3);">[${time}]</span> ${escapeHtml(message)}`;
-  consoleBody.appendChild(logRow);
-  consoleBody.scrollTop = consoleBody.scrollHeight;
-}
 
 function setPageState(state) {
   const lobby = document.getElementById('status-message');
@@ -318,7 +284,6 @@ function updateHistoryUI() {
 window.reDownloadFile = (idx) => {
   const item = receivedFilesHistory[idx];
   if (item) {
-    logToConsole(`RE-DOWNLOADING: ${item.name}`, 'info');
     alert(`File "${item.name}" was downloaded earlier in this session.`);
   }
 };
@@ -328,12 +293,9 @@ window.copyFileName = (idx) => {
   if (item) {
     navigator.clipboard.writeText(item.name)
       .then(() => {
-        logToConsole(`COPIED FILENAME TO CLIPBOARD: ${item.name}`, 'success');
         setPageStatus('Copied to clipboard!', 'success', { duration: 2000 });
       })
-      .catch(err => {
-        logToConsole(`COPY FAILED: ${err.message}`, 'error');
-      });
+      .catch(() => {});
   }
 };
 
@@ -355,7 +317,6 @@ function setupSocket() {
   });
 
   receiveSocket.on("connect", () => {
-    logToConsole('ESTABLISHED SOCKET CONNECTION TO SIGNAL SERVER', 'success');
     const deviceName = getDeviceName();
     receiveSocket.emit("join-session", { sessionId, role, peerId, deviceName });
     setTimeout(() => {
@@ -363,12 +324,7 @@ function setupSocket() {
     }, 100);
   });
 
-  receiveSocket.on("session-joined", (data) => {
-    logToConsole(`SUCCESSFULLY JOINED CHANNEL: ${data.sessionId}`, 'info');
-  });
-
   receiveSocket.on("file-offer", ({ file, senderId: _senderId, senderName }) => {
-    logToConsole(`INCOMING STREAM OFFER: ${file.name} (${formatFileSize(file.size)}) FROM ${senderName}`, 'warning');
     offeredFile = file;
     showOffer(file, senderName);
   });
@@ -409,7 +365,6 @@ function setupSocket() {
   });
 
   receiveSocket.on("upload-started", () => {
-    logToConsole('SENDER INITIATED STREAM TRANSFER', 'info');
     const lobby = document.getElementById('status-message');
     if (lobby) {
       lobby.classList.remove('is-hidden');
@@ -475,7 +430,6 @@ function setupSocket() {
   });
 
   receiveSocket.on("download-ready", ({ file, downloadUrl }) => {
-    logToConsole('Download ready', 'success');
     try { if (window.responseCountdown) clearInterval(window.responseCountdown); } catch (_) {}
     try { document.getElementById('response-timer').classList.add('is-hidden'); } catch (_) {}
     try { document.getElementById('sender-progress').classList.add('is-hidden'); } catch (_) {}
@@ -539,7 +493,6 @@ function setupSocket() {
   });
 
   receiveSocket.on('return-all-to-main', () => {
-    logToConsole('SENDER CANCELLED SESSION. RETURNING TO DASHBOARD.', 'warning');
     try { if (window.responseCountdown) clearInterval(window.responseCountdown); } catch (_) {}
     window.location.href = `/session.html?session=${sessionId}&role=${role}`;
   });
@@ -550,7 +503,6 @@ function setupSocket() {
     }
     // If download was running, set to Complete state (State 4)
     if (downloadActive) {
-      logToConsole('DOWNLOAD TRANSACTION COMPLETED SUCCESSFULLY', 'success');
       downloadCompleted = true;
       setPageState(4);
       
@@ -583,28 +535,24 @@ function setupSocket() {
       }
     } else {
       // Offer canceled or rejected
-      logToConsole('TRANSMISSION OFFER CLOSED', 'info');
       try { if (window.responseCountdown) clearInterval(window.responseCountdown); } catch (_) {}
       setPageState(1);
     }
   });
 
   receiveSocket.on('session-ended', () => {
-    logToConsole('SESSION TERMINATED BY HOST', 'error');
     alert('This session has ended. Redirecting...');
     try { window.close(); } catch (e) {}
     window.location.href = role === 'host' ? '/' : `/session-ended.html?session=${sessionId}&role=${role}`;
   });
 
   receiveSocket.on('session-invalidated', (_data) => {
-    logToConsole('Session updated', 'error');
     alert('Session has been invalidated. The host created a new one.');
     window.location.href = role === 'host' ? '/' : `/session-ended.html?session=${sessionId}&role=${role}`;
   });
   
   receiveSocket.on('peer-removed', (data) => {
     if (data.removedPeerId === peerId) {
-      logToConsole(`KICKED FROM SESSION: ${data.reason || 'Unknown'}`, 'error');
       alert(`You have been removed from the session: ${data.reason || 'Unknown reason'}`);
       window.location.href = role === 'host' ? '/' : `/session-ended.html?session=${sessionId}&role=${role}`;
     }
@@ -618,7 +566,6 @@ function setupSocket() {
   });
 
   receiveSocket.on("disconnect", () => {
-    logToConsole('DISCONNECTED FROM SIGNAL SERVER', 'error');
   });
 }
 
@@ -665,7 +612,6 @@ function startStreamingDownload(fileMeta, url) {
     }
     iframe.src = url;
   } catch (err) {
-    logToConsole(`STREAM DOWNLOAD EXECUTION FAILED: ${err.message}`, 'error');
     showNotification(`Download failed: ${fileMeta.name}`, "error");
     if (offeredFile) {
       addFileToHistory({

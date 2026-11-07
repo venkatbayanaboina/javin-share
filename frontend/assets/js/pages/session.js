@@ -194,36 +194,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     clearSessionExited(sessionId);
   } catch (_) {}
 
-  // Collapsible Activity Console Log Logic
-  const toggleConsoleBtn = document.getElementById('toggle-console-btn');
-  const consoleBody = document.getElementById('console-body');
-  const toggleConsoleText = document.getElementById('toggle-console-text');
-
-  if (toggleConsoleBtn && consoleBody) {
-    toggleConsoleBtn.addEventListener('click', () => {
-      const isHidden = consoleBody.style.display === 'none';
-      consoleBody.style.display = isHidden ? 'block' : 'none';
-      toggleConsoleText.textContent = isHidden ? '[ HIDE ]' : '[ SHOW ]';
-    });
-  }
-
-  function logToConsole(message, type = 'info') {
-    if (!consoleBody) return;
-    const time = new Date().toTimeString().split(' ')[0];
-    const colorMap = {
-      info: 'var(--primary)',
-      success: 'var(--success)',
-      warning: 'var(--warning)',
-      error: 'var(--danger)'
-    };
-    const color = colorMap[type] || 'var(--text-1)';
-    const logRow = document.createElement('div');
-    logRow.style.color = color;
-    logRow.innerHTML = `<span style="color: var(--text-3);">[${time}]</span> ${escapeHtml(message)}`;
-    consoleBody.appendChild(logRow);
-    consoleBody.scrollTop = consoleBody.scrollHeight;
-  }
-
   // Render ASCII topology map
   function updateTopologyMap(peers) {
     const mapEl = document.getElementById('topology-map');
@@ -260,7 +230,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       beforeNavigate: (data) => {
         const to = data?.to || '';
         if (to.includes('receive-files') && mainSocket?.connected) {
-          logToConsole('REDIRECTING TO FILE STREAM CHANNEL', 'info');
           mainSocket.emit('leave-main-page', { sessionId, peerId });
         }
       },
@@ -270,7 +239,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     mainSocket.on('connect', () => {
-      logToConsole('ESTABLISHED SOCKET CONNECTION TO SIGNAL SERVER', 'success');
       document.getElementById('sendBtn').disabled = true;
       mainSocket.emit('join-session', { sessionId, role, peerId, deviceName });
       mainSocket.emit('enter-main-page', { sessionId, peerId, role });
@@ -294,16 +262,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Update ASCII map
       updateTopologyMap(activePeers);
 
-      // Console logger comparison
-      peers.forEach(p => {
-        const wasActive = previousPeers.some(prev => prev.peerId === p.peerId && !prev.isDisconnected);
-        const isActive = !p.isDisconnected;
-        if (isActive && !wasActive) {
-          logToConsole(`Joined: ${p.deviceName || 'Unknown'} [${p.role.toUpperCase()}]`, 'success');
-        } else if (!isActive && wasActive) {
-          logToConsole(`Left: ${p.deviceName || 'Unknown'}`, 'warning');
-        }
-      });
       previousPeers = peers;
       
       // Check if host is in main page (canonical field is `page`)
@@ -351,7 +309,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     mainSocket.on('history-updated', (history) => {
-      logToConsole(`AUDIT_LOG_UPDATED: ${history.length} active records`, 'info');
       renderHistory(history);
     });
 
@@ -430,7 +387,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     mainSocket.on('send-button-locked', (data) => {
-      logToConsole(`Transfer locked by ${data.lockedBy || 'ANOTHER NODE'}`, 'warning');
       const sendButton = document.getElementById('sendBtn');
       if (sendButton) {
         sendButton.disabled = true;
@@ -444,7 +400,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     mainSocket.on('send-button-unlocked', () => {
-      logToConsole('TRANSMISSION LOCK RELEASED', 'success');
       const sendButton = document.getElementById('sendBtn');
       if (sendButton) {
         sendButton.disabled = false;
@@ -457,7 +412,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     mainSocket.on('host-navigation-blocked', (data) => {
-      logToConsole('You can’t leave while a transfer is active', 'error');
       showNotification(data.message || 'Navigation blocked while others are connected.', 'warning');
       const navBlockedIndicator = document.getElementById('hostNavigationBlocked');
       if (navBlockedIndicator) {
@@ -470,7 +424,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     mainSocket.on('host-navigation-allowed', (data) => {
-      logToConsole('You can now leave', 'success');
       showNotification(data.message || 'All peers disconnected. You can leave now.', 'info');
       const navBlockedIndicator = document.getElementById('hostNavigationBlocked');
       if (navBlockedIndicator) {
@@ -479,7 +432,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     
     mainSocket.on('transfer-unlocked', () => {
-      logToConsole('CHANNEL UNLOCKED: TRANSFERS IDLE', 'success');
       const transferStatus = document.getElementById('transfer-status');
       // Keep the element's banner classes — only reveal it (was styled away by
       // overwriting className with nonexistent status-message classes).
@@ -506,18 +458,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     mainSocket.on('return-all-to-main', () => {
-      logToConsole('SENDER CANCELLED. RETURNING NETWORK TO DASHBOARD.', 'warning');
       window.location.href = `/session.html?session=${sessionId}&role=${role}&peerId=${peerId}`;
     });
 
     mainSocket.on('session-ended', () => {
-      logToConsole('SESSION TERMINATED BY HOST', 'error');
       alert('This session has ended. Redirecting...');
       try { window.close(); } catch (e) {}
     });
     
     mainSocket.on('response-timer-started', (data) => {
-      logToConsole(`WAITING FOR RESPONSES: ${data.duration || 30}s`, 'warning');
       const timerContainer = document.getElementById('response-timer');
       const countdownElement = document.getElementById('countdown');
       const responseCountElement = document.getElementById('response-count');
@@ -552,21 +501,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     mainSocket.on('session-invalidated', (_data) => {
-      logToConsole('Session updated', 'error');
       alert('Session has been invalidated. The host created a new one.');
       window.location.href = role === 'host' ? '/' : `/session-ended.html?session=${sessionId}&role=${role}`;
     });
     
     mainSocket.on('peer-removed', (data) => {
       if (data.removedPeerId === peerId) {
-        logToConsole(`KICKED FROM SESSION: ${data.reason || 'Unknown'}`, 'error');
         alert(`You have been removed from the session: ${data.reason || 'Unknown reason'}`);
         window.location.href = role === 'host' ? '/' : `/session-ended.html?session=${sessionId}&role=${role}`;
       }
     });
 
     mainSocket.on('server-shutdown', () => {
-      logToConsole('SERVER SHUTDOWN DETECTED', 'error');
       alert('Session has been ended by the host. This tab will attempt to close.');
       try { window.close(); } catch (e) {}
     });
@@ -579,7 +525,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     mainSocket.on('disconnect', () => {
-      logToConsole('DISCONNECTED FROM SIGNAL SERVER', 'error');
     });
   }
 

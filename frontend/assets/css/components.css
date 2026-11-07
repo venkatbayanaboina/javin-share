@@ -153,7 +153,6 @@
 .page-status,
 .drop-zone,
 .device-item,
-.log-console,
 .url-chip,
 .url-value {
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
@@ -186,7 +185,6 @@
   .page-status,
   .drop-zone,
   .device-item,
-  .log-console,
   .url-chip,
   .url-value {
     background: var(--surface-solid);
@@ -1066,50 +1064,6 @@ html.light-theme .btn-exit:hover:not(:disabled) {
   background: var(--danger-soft);
 }
 
-/* ── Activity log console ── */
-.log-console {
-  overflow: hidden;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-}
-
-.log-console-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  cursor: pointer;
-  user-select: none;
-  background: transparent;
-  border: none;
-  width: 100%;
-  font: inherit;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--text-2);
-  transition: color var(--transition);
-}
-
-.log-console-header:hover {
-  color: var(--text-1);
-}
-
-.log-console-body {
-  max-height: 220px;
-  overflow-y: auto;
-  padding: var(--space-3) var(--space-4);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  line-height: 1.7;
-  color: var(--text-2);
-  border-top: 1px solid var(--border-subtle);
-}
-
-.log-console-body div {
-  overflow-wrap: anywhere;
-}
 
 /* ── Section footer actions ── */
 .footer-actions {

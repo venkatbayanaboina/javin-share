@@ -23,7 +23,6 @@ let selectedQueue = [];
 let currentFileId = null;
 let isRequesting = false;
 let receiversCount = 0;
-let consoleBody = null;
 let knownPeers = new Map();
 let activeXhr = null;
 
@@ -82,18 +81,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   document.getElementById("sessionId").textContent = sessionId;
-
-  // Collapsible Console
-  const toggleConsoleBtn = document.getElementById('toggle-console-btn');
-  consoleBody = document.getElementById('console-body');
-  const toggleConsoleText = document.getElementById('toggle-console-text');
-
-  if (toggleConsoleBtn && consoleBody) {
-    toggleConsoleBtn.addEventListener('click', () => {
-      consoleBody.classList.toggle('is-hidden');
-      toggleConsoleText.textContent = isHidden ? '[ HIDE ]' : '[ SHOW ]';
-    });
-  }
 
   document.getElementById("fileDropZone").addEventListener("click", () => document.getElementById("fileInput").click());
   document.getElementById("fileInput").addEventListener("change", (e) => {
@@ -156,23 +143,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 
-
-function logToConsole(message, type = 'info') {
-  if (!consoleBody) return;
-  const time = new Date().toTimeString().split(' ')[0];
-  const colorMap = {
-    info: 'var(--primary)',
-    success: 'var(--success)',
-    warning: 'var(--warning)',
-    error: 'var(--danger)'
-  };
-  const color = colorMap[type] || 'var(--text-1)';
-  const logRow = document.createElement('div');
-  logRow.style.color = color;
-  logRow.innerHTML = `<span style="color: var(--text-3);">[${time}]</span> ${escapeHtml(message)}`;
-  consoleBody.appendChild(logRow);
-  consoleBody.scrollTop = consoleBody.scrollHeight;
-}
 
 // State display management
 function setPageState(state) {
@@ -255,16 +225,11 @@ function setupSocket() {
   });
 
   sendSocket.on("connect", () => {
-    logToConsole('ESTABLISHED SOCKET CONNECTION TO SIGNAL SERVER', 'success');
     const deviceName = getDeviceName();
     sendSocket.emit("join-session", { sessionId, role, peerId, deviceName });
     setTimeout(() => {
       sendSocket.emit("enter-send-page", { sessionId, peerId });
     }, 100);
-  });
-
-  sendSocket.on("session-joined", (data) => {
-    logToConsole(`SUCCESSFULLY JOINED CHANNEL: ${data.sessionId}`, 'info');
   });
 
   sendSocket.on("peers-updated", (peers) => {
@@ -293,14 +258,12 @@ function setupSocket() {
 
   sendSocket.on("send-approved", ({ fileId }) => {
     if (fileId === currentFileId) {
-      logToConsole('OFFER RECEIVED AND APPROVED BY HOST', 'success');
       setPageStatus('Transmission approved. Staging conduit streams...', 'info');
     }
   });
   
   sendSocket.on("response-timer-started", ({ fileId, duration, totalReceivers }) => {
     if (fileId === currentFileId) {
-      logToConsole(`TRANSMISSION STAGED: WAITING FOR PEER RESPONSES (${duration}s)`, 'warning');
       setPageState(3);
       
       document.getElementById("total-receivers").textContent = totalReceivers;
@@ -320,13 +283,11 @@ function setupSocket() {
 
       const extendBtn = document.getElementById('extend-response-btn');
       extendBtn.onclick = () => {
-        logToConsole('EMITTING TIMEOUT EXTENSION COMMAND', 'info');
         try { sendSocket.emit('extend-response-timer', { sessionId, fileId, senderId: peerId }); } catch (_) {}
       };
       
       const manualBtn = document.getElementById('manual-proceed-btn');
       manualBtn.onclick = () => {
-        logToConsole('Sending now', 'warning');
         try { sendSocket.emit('manual-proceed', { sessionId, fileId, senderId: peerId }); } catch (_) {}
       };
     }
@@ -336,7 +297,6 @@ function setupSocket() {
     if (fileId === currentFileId) {
       document.getElementById("response-count").textContent = totalResponses;
       document.getElementById("total-receivers").textContent = totalReceivers;
-      logToConsole(`Responses: ${totalResponses} / ${totalReceivers} RESPONDED`, 'info');
       
       if (totalResponses >= totalReceivers) {
         clearInterval(window.responseCountdown);
@@ -347,7 +307,6 @@ function setupSocket() {
 
   sendSocket.on('start-upload', ({ fileId }) => {
     if (fileId === currentFileId) {
-      logToConsole('TRANSMISSION IN PROGRESS...', 'info');
       try { if (window.responseCountdown) clearInterval(window.responseCountdown); } catch (_) {}
       setPageState(4);
       startUpload(fileId);
@@ -356,7 +315,6 @@ function setupSocket() {
 
   sendSocket.on("send-rejected", ({ fileId, reason }) => {
     if (fileId === currentFileId) {
-      logToConsole(`TRANSMISSION BLOCK REJECTED: ${reason}`, 'error');
       showNotification(`Transmission rejected: ${reason}`, 'error');
       currentFileId = null;
       isRequesting = false;
@@ -366,7 +324,6 @@ function setupSocket() {
   });
   
   sendSocket.on("transfer-unlocked", () => {
-    logToConsole('TRANSMISSION SHUT DOWN. CHANNEL UNLOCKED.', 'success');
     isRequesting = false;
     setPageState(selectedFile ? 2 : 1);
     updateSendButtonState();
@@ -374,12 +331,10 @@ function setupSocket() {
 
   sendSocket.on('receiver-rejected', ({ fileId, receiverPeerId: _receiverPeerId }) => {
     if (fileId !== currentFileId) return;
-    logToConsole(`Peer declined`, 'warning');
   });
 
   sendSocket.on('all-rejected', ({ fileId }) => {
     if (fileId !== currentFileId) return;
-    logToConsole('ALL PEER CONNECTIONS FAILED OR DECLINED OFFER', 'error');
     try { if (window.responseCountdown) clearInterval(window.responseCountdown); } catch (_) {}
     showNotification('All receivers declined offer.', 'warning');
     dequeueAndProceed();
@@ -387,13 +342,12 @@ function setupSocket() {
 
   sendSocket.on('offer-timeout', ({ fileId }) => {
     if (fileId !== currentFileId) return;
-    logToConsole('TRANSMISSION OFFER TIMED OUT', 'error');
     try { if (window.responseCountdown) clearInterval(window.responseCountdown); } catch (_) {}
     showNotification('Offer expired.', 'warning');
     dequeueAndProceed();
   });
 
-  sendSocket.on('download-progress', ({ fileId, receiverPeerId, loaded, total }) => {
+  sendSocket.on('download-progress', ({ receiverPeerId, loaded, total }) => {
     const percent = total ? Math.round((loaded / total) * 100) : 0;
     
     // Update local cache of peer progress
@@ -426,38 +380,21 @@ function setupSocket() {
       });
       listEl.innerHTML = html;
     }
-
-    if (!window.lastLoggedProgressPercents) {
-      window.lastLoggedProgressPercents = new Map();
-    }
-    const key = `${fileId}-${receiverPeerId}`;
-    const lastPercent = window.lastLoggedProgressPercents.get(key) || 0;
-    if (percent === 100 || percent - lastPercent >= 10) {
-      window.lastLoggedProgressPercents.set(key, percent);
-      const peerName = knownPeers.get(receiverPeerId) || receiverPeerId.substring(0, 8);
-      logToConsole(`PEER [${peerName}] DOWNLOAD PROGRESS: ${percent}%`, 'info');
-      if (percent === 100) {
-        window.lastLoggedProgressPercents.delete(key);
-      }
-    }
   });
 
   sendSocket.on('session-ended', () => {
-    logToConsole('SESSION TERMINATED BY HOST', 'error');
     alert('This session has ended. Redirecting...');
     try { window.close(); } catch (e) {}
     window.location.href = role === 'host' ? '/' : `/session-ended.html?session=${sessionId}&role=${role}`;
   });
 
   sendSocket.on('session-invalidated', (_data) => {
-    logToConsole('Session updated', 'error');
     alert('Session has been invalidated. The host created a new one.');
     window.location.href = role === 'host' ? '/' : `/session-ended.html?session=${sessionId}&role=${role}`;
   });
   
   sendSocket.on('peer-removed', (data) => {
     if (data.removedPeerId === peerId) {
-      logToConsole(`KICKED FROM SESSION: ${data.reason || 'Unknown'}`, 'error');
       alert(`You have been removed from the session: ${data.reason || 'Unknown reason'}`);
       window.location.href = role === 'host' ? '/' : `/session-ended.html?session=${sessionId}&role=${role}`;
     }
@@ -471,7 +408,6 @@ function setupSocket() {
   });
 
   sendSocket.on("disconnect", () => {
-    logToConsole('DISCONNECTED FROM SIGNAL SERVER', 'error');
   });
 }
 
@@ -560,7 +496,6 @@ function requestToSendFile() {
   isRequesting = true;
   updateSendButtonState();
   
-  logToConsole(`Sending file: ${selectedFile.name} (${formatFileSize(selectedFile.size)})`, 'info');
   
   sendSocket.emit("request-send-lock", { sessionId, senderId: peerId }, (response) => {
     if (response.ok) {
@@ -585,7 +520,6 @@ async function startUpload(fileId) {
       const statusJson = await statusResp.json();
       if (statusJson.bytesReceived > 0 && statusJson.bytesReceived < selectedFile.size) {
         offset = statusJson.bytesReceived;
-        logToConsole(`RESUMING STREAM FROM OFFSET ${formatFileSize(offset)}`, 'info');
       }
     }
   } catch (e) {}
@@ -662,7 +596,6 @@ function executeUpload(fileId, offset = 0) {
     activeXhr = null;
     if (xhr.status === 200) {
       const durationSec = Math.max(1, Math.round((Date.now() - startTime) / 1000));
-      logToConsole(`TRANSMISSION SUCCESSFUL: ${selectedFile.name}`, 'success');
       
       const fileMetadata = { id: fileId, name: selectedFile.name, size: selectedFile.size, type: selectedFile.type };
       sendSocket.emit('upload-complete', { sessionId, file: fileMetadata });
