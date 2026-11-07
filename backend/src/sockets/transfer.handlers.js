@@ -14,6 +14,8 @@ import { emitNavigate } from './navigate.js';
 import { clearGraceRedirect } from '../services/grace-redirect.service.js';
 import { isSafeId } from '../utils/ids.js';
 import { canActAs, emitToHostSocket, settleResponses } from './transfer.helpers.js';
+import { scheduleSenderDisruption } from './sender-grace.js';
+import { executeSenderDeparture } from './transfer.helpers.js';
 
 /**
  * File transfer events: send lock, offers, accept/reject, progress and
@@ -731,10 +733,11 @@ export function registerTransferHandlers(io, socket) {
         return;
       }
     }
-    session.activeTransfer = null;
-    session.currentSenderPeerId = null;
-    io.in(sessionId).emit('transfer-unlocked');
-    io.in(sessionId).emit('return-all-to-main');
-    scheduleAbandonedSenderCheck(sessionId, io);
+    // Refresh guard: beforeunload fires cancel-transfer even when the sender
+    // is merely reloading. Defer the room-wide reset briefly — the disruption
+    // is cancelled if the sender re-enters the send page within the window.
+    scheduleSenderDisruption(sessionId, io, () =>
+      executeSenderDeparture(sessionId, socket.data?.peerId, io),
+    );
   });
 }

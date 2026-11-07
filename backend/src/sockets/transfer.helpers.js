@@ -1,7 +1,49 @@
 import { config } from '../config.js';
 import { logger } from '../logger.js';
-import { pushRecentTransfer } from '../state/store.js';
+import { store, pushRecentTransfer } from '../state/store.js';
 import { getTransferCoordinator } from '../services/transfer/coordinator.service.js';
+import { PeerPage, peersOnPage, setPeerPage } from '../services/peer-page.service.js';
+import { emitNavigate } from './navigate.js';
+import { scheduleAbandonedSenderCheck } from '../jobs/abandoned-sender.job.js';
+
+/**
+ * Apply the full "active sender departed" disruption: bounce receive-page
+ * peers back to the session page, reset the transfer state and release the
+ * send lock. Executed via scheduleSenderDisruption once the grace window
+ * confirms the sender is genuinely gone (not merely refreshing).
+ */
+export function executeSenderDeparture(sessionId, peerId, io) {
+  const session = store.sessions.get(sessionId);
+  if (!session) return;
+
+  const receiversInReceivePage = peersOnPage(session, PeerPage.RECEIVE);
+  receiversInReceivePage.forEach((receiver) => {
+    setPeerPage(receiver, PeerPage.SESSION);
+    session.peers.set(receiver.peerId, receiver);
+
+    emitNavigate(io, receiver.socketId, {
+      page: PeerPage.SESSION,
+      reason: 'sender_left_send_page',
+      message: 'The sender has left the send page. You have been redirected to the session page.',
+      sessionId,
+      role: receiver.role,
+      peerId: receiver.peerId,
+    });
+  });
+
+  session.activeTransfer = null;
+  if (!peerId || session.currentSenderPeerId === peerId) {
+    session.currentSenderPeerId = null;
+    io.in(sessionId).emit('send-button-unlocked', {
+      unlockedBy: peerId || 'system',
+      message: 'Send button is now unlocked. Sender left send page.',
+      timestamp: Date.now(),
+    });
+  }
+  io.in(sessionId).emit('transfer-unlocked');
+  io.in(sessionId).emit('return-all-to-main');
+  scheduleAbandonedSenderCheck(sessionId, io);
+}
 
 export function canActAs(socket, claimedId) {
   if (!socket?.data?.peerId) return true;

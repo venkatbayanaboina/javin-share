@@ -12,6 +12,8 @@ import { scheduleAbandonedSenderCheck } from '../jobs/abandoned-sender.job.js';
 import { emitNavigate } from './navigate.js';
 import { clearGraceRedirect, extendGraceRedirect } from '../services/grace-redirect.service.js';
 import { handleReceiverExit } from './transfer.helpers.js';
+import { cancelSenderDisruption, scheduleSenderDisruption } from './sender-grace.js';
+import { executeSenderDeparture } from './transfer.helpers.js';
 
 /**
  * Page navigation events: peers moving between the index, send, receive, PIN
@@ -193,6 +195,10 @@ export function registerPageHandlers(io, socket) {
     const session = store.sessions.get(sessionId);
     if (!session) return;
 
+    // The sender is on the send page again — any pending "sender left"
+    // disruption (e.g. fired by a page refresh) must not touch receivers.
+    cancelSenderDisruption(sessionId, 'sender entered send page');
+
     const peer = session.peers.get(peerId);
     if (peer) {
       // Check if peer was already in send page (page refresh scenario)
@@ -246,44 +252,18 @@ export function registerPageHandlers(io, socket) {
       session.peers.set(peerId, peer);
       logger.info(`📤 Peer ${peerId} left send page in session ${sessionId}`);
 
-      const receiversInReceivePage = peersOnPage(session, PeerPage.RECEIVE);
-
-      // Only bounce receivers to session when the active sender leaves — not when another
+      // Only the active sender's departure disrupts receivers — not when another
       // peer is redirected to receive (their navigate handler emits leave-send-page).
-      if (wasActiveSender && receiversInReceivePage.length > 0) {
-        logger.info(
-          `🔄 Sender ${peerId} left send — redirecting ${receiversInReceivePage.length} receivers to session page`,
-        );
-
-        receiversInReceivePage.forEach((receiver) => {
-          setPeerPage(receiver, PeerPage.SESSION);
-          session.peers.set(receiver.peerId, receiver);
-
-          emitNavigate(io, receiver.socketId, {
-            page: PeerPage.SESSION,
-            reason: 'sender_left_send_page',
-            message:
-              'The sender has left the send page. You have been redirected to the session page.',
-            sessionId,
-            role: receiver.role,
-            peerId: receiver.peerId,
-          });
-        });
-      }
-
-      // 🆕 NEW: Release the send lock since sender is no longer in send page
       if (wasActiveSender) {
-        session.currentSenderPeerId = null;
-        logger.info(`🔓 Send lock released for ${peerId} - sender left send page`);
-
-        // Notify all peers that send button is now unlocked
-        io.in(sessionId).emit('send-button-unlocked', {
-          unlockedBy: peerId,
-          message: 'Send button is now unlocked. Sender left send page.',
-          timestamp: Date.now(),
-        });
+        // Refresh guard: the browser fires beforeunload → leave-send-page even
+        // when the sender is merely reloading. Defer the disruption briefly —
+        // it is cancelled when the sender re-enters the send page.
+        scheduleSenderDisruption(sessionId, io, () =>
+          executeSenderDeparture(sessionId, peerId, io),
+        );
+      } else {
+        scheduleAbandonedSenderCheck(sessionId, io);
       }
-      scheduleAbandonedSenderCheck(sessionId, io);
     }
   });
 

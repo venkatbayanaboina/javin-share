@@ -14,6 +14,7 @@ import {
   syncGraceToHost,
 } from '../services/grace-redirect.service.js';
 import { assertHostPeer } from '../services/peer-auth.service.js';
+import { cancelSenderDisruption } from './sender-grace.js';
 import { isSafeId } from '../utils/ids.js';
 import { isLocalSocket } from '../utils/request.js';
 import { canActAs, handleReceiverExit } from './transfer.helpers.js';
@@ -100,6 +101,9 @@ export function registerSessionLifecycle(io, socket) {
     };
 
     if (joiningSendPage) {
+      // A send-page join right after a leave-send-page means the sender was
+      // refreshing, not leaving — cancel any pending receiver disruption.
+      cancelSenderDisruption(sessionId, 'sender rejoined on send page');
       setPeerPage(peerData, PeerPage.SEND);
     } else if (joiningReceivePage) {
       setPeerPage(peerData, PeerPage.RECEIVE);
