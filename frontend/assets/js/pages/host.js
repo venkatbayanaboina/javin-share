@@ -157,7 +157,7 @@ async function copyTextToClipboard(text) {
           } else {
             // No device name - show input form
             document.getElementById("loading").style.display = "none";
-            document.getElementById("device-name-section").style.display = "block";
+            document.getElementById("device-name-section").classList.remove("is-hidden");
           }
         } catch (err) {
           console.error(err);
@@ -203,8 +203,8 @@ async function copyTextToClipboard(text) {
           el.textContent = deviceName;
         });
         document.getElementById("loading").style.display = "none";
-        document.getElementById("device-name-section").style.display = "none";
-        document.getElementById("host-section").style.display = "block";
+        document.getElementById("device-name-section").classList.add("is-hidden");
+        document.getElementById("host-section").classList.remove("is-hidden");
         
                   // Check if there's a saved PIN timer to restore
           try {
@@ -246,15 +246,6 @@ async function copyTextToClipboard(text) {
         applyGraceCountdown({ durationSeconds, sessionId });
       };
       
-      // Function to handle extend button timeout (prevent stuck buttons)
-      window.extendButtonTimeout = function(button) {
-        setTimeout(() => {
-          if (button && button.disabled) {
-            button.disabled = false;
-            button.textContent = 'Extend 30s';
-          }
-        }, 10000);
-      }
       function setupSocket(sessionId) {
         hostSocket = io({ transports: ['websocket'] });
 
@@ -690,8 +681,8 @@ async function copyTextToClipboard(text) {
           try {
             removeDeviceName();
             // Show device name input section again
-            document.getElementById("host-section").style.display = "none";
-            document.getElementById("device-name-section").style.display = "block";
+            document.getElementById("host-section").classList.add("is-hidden");
+            document.getElementById("device-name-section").classList.remove("is-hidden");
             // Clear the input field
             document.getElementById("device-name-input").value = "";
             // Focus on the input

@@ -19,7 +19,7 @@ try {
 
   if (nodes || files || data || duration) {
     const container = document.getElementById('metrics-summary-container');
-    if (container) container.style.display = 'block';
+    if (container) container.classList.remove('is-hidden');
     if (nodes) document.getElementById('stat-nodes').textContent = nodes;
     if (files) document.getElementById('stat-files').textContent = files;
     if (data) document.getElementById('stat-data').textContent = data;

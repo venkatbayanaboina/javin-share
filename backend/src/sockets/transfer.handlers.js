@@ -67,9 +67,7 @@ export function registerTransferHandlers(io, socket) {
           checkAndReleaseStaleTransferLocks(sessionId, io);
         } catch (_) {}
       } else if (!hostPeer) {
-        logger.info(
-          `❌ No host present in session, rejecting send lock request from ${senderId}`,
-        );
+        logger.info(`❌ No host present in session, rejecting send lock request from ${senderId}`);
         return (
           typeof ack === 'function' &&
           ack({
@@ -296,8 +294,7 @@ export function registerTransferHandlers(io, socket) {
 
     // Start 30-second timer to check if all receivers have responded
     try {
-      if (session.activeTransfer.responseTimer)
-        clearTimeout(session.activeTransfer.responseTimer);
+      if (session.activeTransfer.responseTimer) clearTimeout(session.activeTransfer.responseTimer);
     } catch (_) {}
 
     // Emit the timer start event to all clients, including those on the index page
@@ -548,9 +545,7 @@ export function registerTransferHandlers(io, socket) {
           // Queue progression will now be driven by actual download completion in /download route
         } else {
           // Download flag is 1 (downloading), add to queue
-          logger.info(
-            `File ${file.name} waiting for ${receiverPeerId} to finish current download`,
-          );
+          logger.info(`File ${file.name} waiting for ${receiverPeerId} to finish current download`);
 
           // Add to queue for later processing
           if (!store.receiverDownloadQueues.has(sessionId)) {
@@ -638,8 +633,7 @@ export function registerTransferHandlers(io, socket) {
     session.activeTransfer.responseDeadlineMs = now + newRemainingMs;
 
     try {
-      if (session.activeTransfer.responseTimer)
-        clearTimeout(session.activeTransfer.responseTimer);
+      if (session.activeTransfer.responseTimer) clearTimeout(session.activeTransfer.responseTimer);
     } catch (_) {}
     const totalReceivers = session.activeTransfer.receiversSnapshot.length;
     io.in(sessionId).emit('response-timer-started', {
@@ -682,8 +676,7 @@ export function registerTransferHandlers(io, socket) {
     if (session.activeTransfer.senderPeerId !== senderId) return;
     if (!canActAs(socket, senderId)) return;
     try {
-      if (session.activeTransfer.responseTimer)
-        clearTimeout(session.activeTransfer.responseTimer);
+      if (session.activeTransfer.responseTimer) clearTimeout(session.activeTransfer.responseTimer);
     } catch (_) {}
     const acceptedCount = session.activeTransfer.acceptedReceivers.size;
     const sender = session.peers.get(senderId);
@@ -713,8 +706,7 @@ export function registerTransferHandlers(io, socket) {
     if (!canActAs(socket, senderId)) return;
     // Clear timers and active transfer, keep the sender lock so they can immediately send next
     try {
-      if (session.activeTransfer.responseTimer)
-        clearTimeout(session.activeTransfer.responseTimer);
+      if (session.activeTransfer.responseTimer) clearTimeout(session.activeTransfer.responseTimer);
     } catch (_) {}
     session.activeTransfer = null;
     session.currentSenderPeerId = null; // Release the send lock

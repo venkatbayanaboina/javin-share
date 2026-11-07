@@ -370,9 +370,7 @@ export function registerPageHandlers(io, socket) {
         // Don't emit navigation blocked yet - only when they actually try to leave
         // The blocking will happen in the leave-main-page event handler
       } else {
-        logger.info(
-          `✅ Host ${peerId} entered main page with no other peers - navigation allowed`,
-        );
+        logger.info(`✅ Host ${peerId} entered main page with no other peers - navigation allowed`);
       }
     }
 

@@ -36,8 +36,8 @@ if (savedDeviceName) {
 
 function showFormError(message) {
   errorDisplay.textContent = message;
-  errorDisplay.style.display = 'block';
-  statusDisplay.style.display = 'none';
+  errorDisplay.classList.remove('is-hidden');
+  statusDisplay.classList.add('is-hidden');
 }
 
 // Popup message functions
@@ -166,7 +166,7 @@ async function attemptConnection() {
     return;
   }
   
-  errorDisplay.style.display = 'none';
+  errorDisplay.classList.add('is-hidden');
   setInputsDisabled(true);
   connectBtn.textContent = '[ VERIFYING SESSION... ]';
   isConnecting = true;
@@ -281,7 +281,7 @@ pinForm.addEventListener('submit', (e) => {
 
 pinInput.addEventListener('input', () => {
   const pin = pinInput.value;
-  errorDisplay.style.display = 'none';
+  errorDisplay.classList.add('is-hidden');
   
   if (pin.length === 6) {
     if (!/^\d{6}$/.test(pin)) {

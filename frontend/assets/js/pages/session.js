@@ -484,7 +484,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Keep the element's banner classes — only reveal it (was styled away by
       // overwriting className with nonexistent status-message classes).
       transferStatus.classList.remove('is-hidden');
-      document.getElementById('response-timer').style.display = 'none';
+      document.getElementById('response-timer').classList.add('is-hidden');
       
       if (hostInMainPage) {
         transferStatus.textContent = 'Ready to send files. Receiving is automatic.';
@@ -526,7 +526,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       countdownElement.textContent = String(data.duration || 30);
       responseCountElement.textContent = '0';
       totalReceiversElement.textContent = data.totalReceivers;
-      timerContainer.style.display = 'block';
+      timerContainer.classList.remove('is-hidden');
       
       if (window.responseTimerInterval) clearInterval(window.responseTimerInterval);
       let secondsLeft = data.duration || 30;
@@ -543,7 +543,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const responseCountElement = document.getElementById('response-count');
       if (responseCountElement) responseCountElement.textContent = data.totalResponses;
       if (data.totalResponses >= data.totalReceivers) {
-        document.getElementById('response-timer').style.display = 'none';
+        document.getElementById('response-timer').classList.add('is-hidden');
         if (window.responseTimerInterval) {
           clearInterval(window.responseTimerInterval);
           window.responseTimerInterval = null;

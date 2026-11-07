@@ -113,11 +113,11 @@ a:focus-visible {
 }
 
 /* ── Utilities ── */
-/* Doubled class = specificity (0,2,0) so it beats component display rules
-   (.banner, .modal-overlay, …) without !important — JS inline style.display
-   toggles still take precedence over this class. */
+/* The single show/hide protocol: JS toggles the .is-hidden class
+   (classList.add / remove). !important lets the class win over inline
+   layout styles shipped in the HTML; never reveal these via style.display. */
 .is-hidden.is-hidden {
-  display: none;
+  display: none !important;
 }
 
 [hidden] {

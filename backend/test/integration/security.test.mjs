@@ -24,7 +24,6 @@ describe('security hardening', () => {
   });
 
   describe('download receiver authorization', () => {
-
     it('rejects download for a receiver that is not part of the session (403)', async () => {
       const { sessionId } = await createSession(io, true);
 

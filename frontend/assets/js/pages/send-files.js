@@ -90,8 +90,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (toggleConsoleBtn && consoleBody) {
     toggleConsoleBtn.addEventListener('click', () => {
-      const isHidden = consoleBody.style.display === 'none';
-      consoleBody.style.display = isHidden ? 'block' : 'none';
+      consoleBody.classList.toggle('is-hidden');
       toggleConsoleText.textContent = isHidden ? '[ HIDE ]' : '[ SHOW ]';
     });
   }
@@ -185,25 +184,25 @@ function setPageState(state) {
   if (state === 1) {
     if (dropZone) dropZone.style.display = 'block';
     if (stagedSection) stagedSection.classList.add('is-hidden');
-    if (responseTimer) responseTimer.style.display = 'none';
-    if (uploadSection) uploadSection.style.display = 'none';
+    if (responseTimer) responseTimer.classList.add('is-hidden');
+    if (uploadSection) uploadSection.classList.add('is-hidden');
     clearReceiverProgress();
   } else if (state === 2) {
     if (dropZone) dropZone.style.display = 'block';
     if (stagedSection) stagedSection.classList.remove('is-hidden');
-    if (responseTimer) responseTimer.style.display = 'none';
-    if (uploadSection) uploadSection.style.display = 'none';
+    if (responseTimer) responseTimer.classList.add('is-hidden');
+    if (uploadSection) uploadSection.classList.add('is-hidden');
     clearReceiverProgress();
   } else if (state === 3) {
     if (dropZone) dropZone.style.display = 'none';
     if (stagedSection) stagedSection.classList.add('is-hidden');
-    if (responseTimer) responseTimer.style.display = 'block';
-    if (uploadSection) uploadSection.style.display = 'none';
+    if (responseTimer) responseTimer.classList.remove('is-hidden');
+    if (uploadSection) uploadSection.classList.add('is-hidden');
   } else if (state === 4 || state === 5) {
     if (dropZone) dropZone.style.display = 'none';
     if (stagedSection) stagedSection.classList.add('is-hidden');
-    if (responseTimer) responseTimer.style.display = 'none';
-    if (uploadSection) uploadSection.style.display = 'block';
+    if (responseTimer) responseTimer.classList.add('is-hidden');
+    if (uploadSection) uploadSection.classList.remove('is-hidden');
   }
 }
 
@@ -341,7 +340,7 @@ function setupSocket() {
       
       if (totalResponses >= totalReceivers) {
         clearInterval(window.responseCountdown);
-        document.getElementById("response-timer").style.display = "none";
+        document.getElementById("response-timer").classList.add("is-hidden");
       }
     }
   });
