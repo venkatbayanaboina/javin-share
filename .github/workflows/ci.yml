@@ -9,12 +9,16 @@ on:
 jobs:
   test-and-lint:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ['18', '20', '22']
     steps:
       - uses: actions/checkout@v5
 
       - uses: actions/setup-node@v5
         with:
-          node-version: '22'
+          node-version: ${{ matrix.node-version }}
           cache: npm
           cache-dependency-path: backend/package-lock.json
 
@@ -24,8 +28,37 @@ jobs:
       - name: Run unit and integration tests
         run: npm test --prefix backend
 
-      - name: ESLint
+      - name: ESLint (backend)
         run: npm run lint --prefix backend
 
-      - name: Prettier check
+      - name: Prettier check (backend)
         run: npm run format:check --prefix backend
+
+      - name: ESLint (frontend)
+        run: npm run lint:frontend
+
+      - name: ShellCheck launchers
+        run: |
+          if ! command -v shellcheck >/dev/null 2>&1; then
+            sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck
+          fi
+          shellcheck "launchers/Javin FileShare (for macOS & Linux).sh" "launchers/FileShare (for macOS).command"
+
+  security-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Dependency audit (production)
+        run: npm audit --omit=dev --prefix backend --audit-level=high
+
+      - name: Root script smoke (delegation sanity)
+        run: |
+          npm ci --prefix backend
+          npm run test:unit --silent

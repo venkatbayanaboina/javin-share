@@ -195,9 +195,9 @@ echo => All setup complete! Starting server...
 echo => Press Ctrl+C to stop the server
 echo.
 
-:: Open browser after 2 seconds
-timeout /t 2 /nobreak >nul
-start "" "%URL%"
+:: Schedule the browser to open once the server answers (probes localhost,
+:: independent of the QR hostname). Runs minimized and exits by itself.
+start "" /min cmd /c "for /l %%i in (1,1,30) do @(curl -sk -o nul https://localhost:%PORT%/api/v1/health 2>nul && (start "" https://localhost:%PORT% & exit /b) & timeout /t 1 >nul)"
 
 echo => Starting server...
 echo => Server is now running! Check your browser.

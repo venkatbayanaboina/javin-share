@@ -304,7 +304,6 @@ function setupSocket() {
       logToConsole(`TRANSMISSION STAGED: WAITING FOR PEER RESPONSES (${duration}s)`, 'warning');
       setPageState(3);
       
-      const timerContainer = document.getElementById("response-timer");
       document.getElementById("total-receivers").textContent = totalReceivers;
       document.getElementById("response-count").textContent = "0";
       
@@ -374,7 +373,7 @@ function setupSocket() {
     updateSendButtonState();
   });
 
-  sendSocket.on('receiver-rejected', ({ fileId, receiverPeerId }) => {
+  sendSocket.on('receiver-rejected', ({ fileId, receiverPeerId: _receiverPeerId }) => {
     if (fileId !== currentFileId) return;
     logToConsole(`Peer declined`, 'warning');
   });
@@ -451,7 +450,7 @@ function setupSocket() {
     window.location.href = role === 'host' ? '/' : `/session-ended.html?session=${sessionId}&role=${role}`;
   });
 
-  sendSocket.on('session-invalidated', (data) => {
+  sendSocket.on('session-invalidated', (_data) => {
     logToConsole('Session updated', 'error');
     alert('Session has been invalidated. The host created a new one.');
     window.location.href = role === 'host' ? '/' : `/session-ended.html?session=${sessionId}&role=${role}`;
@@ -521,7 +520,7 @@ function renderSelectedList() {
   
   // Attach listeners to remove buttons
   el.querySelectorAll('.remove-file').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', (_e) => {
       const idx = parseInt(btn.getAttribute('data-index'), 10);
       removeAtIndex(idx);
     });
@@ -535,7 +534,7 @@ function renderSelectedList() {
 }
 
 function removeAtIndex(idx) {
-  const removed = selectedQueue.splice(idx, 1)[0];
+  selectedQueue.splice(idx, 1);
   const wasCurrentTop = (idx === 0 && currentFileId);
   selectedFile = selectedQueue[0] || null;
   document.getElementById("fileInput").value = "";

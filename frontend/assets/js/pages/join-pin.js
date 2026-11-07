@@ -40,12 +40,6 @@ function showFormError(message) {
   statusDisplay.style.display = 'none';
 }
 
-function showStatus(message) {
-  statusDisplay.textContent = message;
-  statusDisplay.style.display = 'block';
-  errorDisplay.style.display = 'none';
-}
-
 // Popup message functions
 function showPopupMessage(title, message, type = 'info') {
   const popup = document.getElementById('popupMessage');
@@ -232,7 +226,7 @@ async function attemptConnection() {
         const peerId = getPeerId();
         socket.emit('client-has-verified', { sessionId: currentSessionId });
         
-        socket.on('session-joined', (joinData) => {
+        socket.on('session-joined', (_joinData) => {
           clearTimeout(joinTimeout);
           updatePopupMessage('Verified', 'Redirecting…', 'success');
           

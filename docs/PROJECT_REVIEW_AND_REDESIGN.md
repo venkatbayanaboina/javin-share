@@ -2,7 +2,17 @@
 
 > Full review performed 2026-11-07 against `main` (commit `465272a`).
 > Scope: backend architecture, frontend UI/CSS/JS, launchers, CI, docs, repo hygiene.
-> Guiding constraints: **no breaking changes**, keep the build-less frontend, keep the 56-test suite green at every step.
+> Guiding constraints: **no breaking changes**, keep the build-less frontend, keep the test suite green at every step.
+>
+> **Implementation status:** Phases 1-3 and the Phase-4 quick wins are **complete and committed**
+> (62/62 tests green): security hardening, error/process handling, sweeps, bug fixes, dead-code
+> purge, glassmorphism redesign, gzip + static caching + per-page CSS. Peer-page legacy fields
+> fully migrated (single source of truth: `peer.page`). Strategy layer consolidated
+> (`releaseTransferLock`, 1 MiB branch buffer, 32 MiB spool default). Socket handlers split into
+> `session.lifecycle` / `transfer.handlers` / `page.handlers` with shared `transfer.helpers`.
+> Phase 5 tooling/CI/docs complete: Node 18/20/22 CI matrix, `npm audit` gate, frontend ESLint,
+> `.env.example` regenerated, planning docs archived, launchers fixed (PORT from env, desktop
+> entries outside the repo tree, Windows browser-after-server).
 
 ---
 

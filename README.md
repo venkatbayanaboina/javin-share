@@ -92,7 +92,7 @@ Javin-Share-/
 │   │       ├── transfer/         # Coordinator & Strategies (disk, stream, buffered)
 │   │       ├── session.service.js     # Host-client handshake & state orchestration
 │   │       └── download-queue.service.js  # Multi-client queue and backpressure services
-│   └── test/                     # 56-test suite (unit, integration & security regression)
+│   └── test/                     # 62-test suite (unit, integration & security regression)
 ├── frontend/
 │   ├── host.html                 # Host admin panel (PIN/QR generator)
 │   ├── join-pin.html             # Client pin verification portal
@@ -105,9 +105,7 @@ Javin-Share-/
 ├── docs/
 │   ├── evaluation_of_architecture.md # Benchmark methodology, results & strategy routing
 │   ├── SOCKET_EVENTS.md          # Socket.IO event contract (client ⇄ server)
-│   ├── FINAL_PLAN.md             # Spec audits & deferred timers implementation plan
-│   ├── POST_RESTRUCTURE_ROADMAP.md # Detailed track progress and engineering logs
-│   ├── PHASE_PROGRESS.md        # Checkbox-level phase progress manifest
+│   ├── PROJECT_REVIEW_AND_REDESIGN.md # Full review: security, UI redesign & roadmap
 │   ├── SECURITY.md               # LAN security model and rate-limit controls
 │   └── benchmarks/               # Append-only benchmark result log (BASELINE.md)
 ├── package.json                  # Root script orchestration
@@ -153,7 +151,7 @@ npm install
 node server.js
 ```
 
-Navigate to `https://<your-host-lan-ip>:4000` (or `https://localhost:4000` on the hosting machine) in any modern browser. Accept the local self-signed SSL certificate warning to begin.
+The launcher opens `https://localhost:4000` on the hosting machine automatically (joining devices scan the QR code, which points at the advertised `javin.share.local` hostname). The launcher installs the local self-signed certificate into the system trust store; if the admin password prompt is dismissed, browsers will show a one-time certificate warning.
 
 ---
 
@@ -168,7 +166,7 @@ cd backend && npm install
 # Boot development environment with hot-reloading
 npm run dev
 
-# Run comprehensive 56-test suite (unit, integration, strategy & security regression tests)
+# Run the 62-test suite (unit, integration, strategy & security regression tests)
 npm test
 
 # Run isolated transfer optimization strategy tests
@@ -178,8 +176,9 @@ npm run test:opt
 npm run test:unit
 npm run test:integration
 
-# Run code linters (ESLint)
+# Run code linters (ESLint — backend + frontend)
 npm run lint
+npm run lint:frontend
 
 # Audit source formatting (Prettier)
 npm run format:check
@@ -196,8 +195,10 @@ npm run format:check
 | `PIN_MAX_ATTEMPTS` | `Number` | `8` | Failed verification attempts permitted before lockout. |
 | `TRANSFER_DEFAULT_STRATEGY` | `String` | `'relay-disk'` | Default fallback transfer mode (`relay-disk`, `relay-buffered`). |
 | `TRANSFER_ENABLE_STREAM_RELAY`| `Boolean`| `false` | Set `true` to enable pipe-through stream modes. |
-| `TRANSFER_SPOOL_THRESHOLD_BYTES`| `Number`| `268,435,456` | Spool boundary for buffered strategy (default: 256 MiB). |
-| `TRANSFER_CHUNK_SIZE_BYTES` | `Number` | `8,388,608` | Chunk buffer size for stream relays (default: 8 MiB). |
+| `TRANSFER_SPOOL_THRESHOLD_BYTES`| `Number`| `33,554,432` | Spool boundary for buffered strategy (default: 32 MiB). |
+| `TRANSFER_CHUNK_SIZE_BYTES` | `Number` | `1,048,576` | Per-receiver branch buffer before backpressure (default: 1 MiB). |
+| `CUSTOM_HOST` | `String` | `javin.share.local` | Hostname advertised via mDNS and embedded in the TLS cert. |
+| `OPEN_BROWSER` | `Boolean` | `false` | Server-side auto-open of the host tab (launchers open their own). |
 | `TRANSFER_MAX_RECEIVER_BUFFER_SIZE` | `Number` | `16,777,216` | Per-receiver queue cap before a stalled receiver is dropped (default: 16 MB). |
 | `TRANSFER_STREAM_RELAY_TIMEOUT_MS` | `Number` | `30000` | No-receiver window before stream/buffered uploads fall back to disk spool. |
 | `MAX_CONCURRENT_DOWNLOADS` | `Number` | `3` | Parallel downloads permitted per receiver before queuing. |

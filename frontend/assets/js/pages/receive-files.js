@@ -367,13 +367,13 @@ function setupSocket() {
     logToConsole(`SUCCESSFULLY JOINED CHANNEL: ${data.sessionId}`, 'info');
   });
 
-  receiveSocket.on("file-offer", ({ file, senderId, senderName }) => {
+  receiveSocket.on("file-offer", ({ file, senderId: _senderId, senderName }) => {
     logToConsole(`INCOMING STREAM OFFER: ${file.name} (${formatFileSize(file.size)}) FROM ${senderName}`, 'warning');
     offeredFile = file;
     showOffer(file, senderName);
   });
   
-  receiveSocket.on("response-timer-started", ({ fileId, duration, totalReceivers }) => {
+  receiveSocket.on("response-timer-started", ({ fileId, duration, totalReceivers: _totalReceivers }) => {
     if (offeredFile && offeredFile.id === fileId) {
       const timerContainer = document.getElementById("response-timer");
       if (timerContainer) {
@@ -596,7 +596,7 @@ function setupSocket() {
     window.location.href = role === 'host' ? '/' : `/session-ended.html?session=${sessionId}&role=${role}`;
   });
 
-  receiveSocket.on('session-invalidated', (data) => {
+  receiveSocket.on('session-invalidated', (_data) => {
     logToConsole('Session updated', 'error');
     alert('Session has been invalidated. The host created a new one.');
     window.location.href = role === 'host' ? '/' : `/session-ended.html?session=${sessionId}&role=${role}`;

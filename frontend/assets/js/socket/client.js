@@ -27,7 +27,7 @@ export async function initPinPageSocket(role = 'client') {
       socket.emit('join-session', { sessionId, role, peerId });
     });
 
-    new ConnectionMonitor(socket).onStatusChange((status) => {
+    new ConnectionMonitor(socket).onStatusChange((_status) => {
     });
 
     return socket;

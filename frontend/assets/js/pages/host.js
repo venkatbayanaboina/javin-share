@@ -2,14 +2,11 @@ import '../core/index.js';
 import { registerNavigateListener } from '../core/navigate.js';
 import { mountGraceCountdown, mountPinCountdown, syncGraceFromApi } from '../core/grace-timer.js';
 import {
-  getPeerId,
   getDeviceName,
   setDeviceName,
   removeDeviceName,
   clearAllExitedFlags,
   getUrlParameter,
-  showError,
-  showNotification,
   escapeHtml,
 } from '../core/index.js';
 
@@ -96,8 +93,6 @@ async function copyTextToClipboard(text) {
       let sessionData = null;
       const peerId = getPeerId();
       let nonHostCount = 0;
-      let lastClientSeenAt = 0;
-      let isRestoringGraceTimer = false;
 
       async function init() {
         try {
@@ -115,9 +110,9 @@ async function copyTextToClipboard(text) {
             url = `/get-current-session?session=${sessionParam}`;
           } else {
             // If no session parameter, check if we're refreshing or need a new session
-            const isRefresh = performance?.navigation?.type === performance?.navigation?.TYPE_RELOAD;
-            // Only force new if it's explicitly requested via URL parameter
-            const forceNewParam = urlParams.get('forceNew') === '1';
+            // (Navigation Timing API — performance.navigation is deprecated)
+            const navType = performance.getEntriesByType('navigation')[0]?.type;
+            const isRefresh = navType === 'reload';
             
             if (isRefresh) {
               // Page refresh - get current session
@@ -136,14 +131,6 @@ async function copyTextToClipboard(text) {
           }
           sessionData = await resp.json();
           
-          // Check if this is a new session or existing session
-          if (url.includes('forceNew=1')) {
-            // Don't start grace timer until a client actually joins
-          } else if (url.includes('refresh=1')) {
-          } else if (url.includes('session=')) {
-          } else {
-          }
-          
           // Connect to socket immediately so we can receive grace timer events
           setupSocket(sessionData.sessionId);
           
@@ -161,8 +148,6 @@ async function copyTextToClipboard(text) {
           
           // Check if device name already exists locally
           const existingDeviceName = getDeviceName();
-          const isRefresh = performance?.navigation?.type === performance?.navigation?.TYPE_RELOAD;
-          const forceNew = urlParams.get('forceNew') === '1';
           
           if (existingDeviceName) {
             // Device name exists - always reuse it (regardless of forceNew)
@@ -188,7 +173,6 @@ async function copyTextToClipboard(text) {
         // Update device name in session (host is already joined)
         if (hostSocket && hostSocket.connected) {
           hostSocket.emit('update-device-name', { sessionId, deviceName });
-        } else {
         }
         
         // Display the session
@@ -395,10 +379,6 @@ async function copyTextToClipboard(text) {
           showNotification('Connection to server lost. Server may have shut down.', 'error');
         });
 
-        // Confirm when host successfully joins session
-        hostSocket.on("session-joined", (data) => {
-        });
-        
         hostSocket.on("connect", () => {
           
           // Join session immediately to receive grace timer events
@@ -462,8 +442,6 @@ async function copyTextToClipboard(text) {
           nonHostCount = clientCount;
           
           if (clientCount > 0) {
-            lastClientSeenAt = Date.now();
-            
             // Reveal Connected Nodes panel
             const statusPanel = document.getElementById("status-panel");
             if (statusPanel) {
@@ -574,7 +552,6 @@ async function copyTextToClipboard(text) {
           // Only redirect if there are clients connected (nonHostCount > 0)
           if (nonHostCount > 0) {
             window.location.href = `/session.html?session=${sessionData?.sessionId}&role=host`;
-          } else {
           }
         });
       }
@@ -683,8 +660,11 @@ async function copyTextToClipboard(text) {
         extendBtn.disabled = true;
         extendBtn.textContent = 'Extending...';
         
-        // Set timeout to re-enable button if no response
-        extendButtonTimeout(extendBtn);
+        // Re-enable after a short cooldown if no response arrives
+        setTimeout(() => {
+          extendBtn.disabled = false;
+          extendBtn.textContent = 'Extend 30s';
+        }, 5000);
         
         try { 
           hostSocket.emit('host-extend-redirect', { sessionId: sessionData.sessionId }, (ack) => {
