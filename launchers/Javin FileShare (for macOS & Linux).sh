@@ -9,6 +9,7 @@ PORT=4000
 # 2. Add common Node.js installation paths to PATH if not already present
 NVM_NODE_DIR=""
 if [ -d "$HOME/.nvm/versions/node" ]; then
+  # shellcheck disable=SC2012  # nvm version dirs are simple safe names
   LATEST_NVM=$(ls "$HOME/.nvm/versions/node" 2>/dev/null | tail -n 1 || echo "")
   if [ -n "$LATEST_NVM" ]; then
     NVM_NODE_DIR="$HOME/.nvm/versions/node/$LATEST_NVM/bin"
@@ -59,7 +60,7 @@ fi
 # Load CUSTOM_HOST from .env if available
 CUSTOM_HOST=""
 if [ -f "$SCRIPT_DIR/../.env" ]; then
-  CUSTOM_HOST=$(grep -E "^CUSTOM_HOST=" "$SCRIPT_DIR/../.env" | cut -d'=' -f2- | tr -d '"'\''\r' || echo "")
+  CUSTOM_HOST=$(grep -E "^CUSTOM_HOST=" "$SCRIPT_DIR/../.env" | cut -d'=' -f2- | tr -d "\"'\r" || echo "")
 fi
 
 # Reset if using legacy sslip.io wildcard, old javin-share- dash format, or random-suffix local hosts
@@ -81,14 +82,13 @@ fi
 
 # Honor PORT from .env if present (launchers previously hardcoded 4000)
 if [ -f "$SCRIPT_DIR/../.env" ]; then
-  ENV_PORT=$(grep -E "^PORT=" "$SCRIPT_DIR/../.env" | cut -d'=' -f2- | tr -d '"\'\''\r' || echo "")
+  ENV_PORT=$(grep -E "^PORT=" "$SCRIPT_DIR/../.env" | cut -d'=' -f2- | tr -d "\"'\r" || echo "")
   if [ -n "$ENV_PORT" ]; then
     PORT="$ENV_PORT"
   fi
 fi
 
 DISPLAY_HOST="$CUSTOM_HOST"
-URL="https://$DISPLAY_HOST:$PORT"
 
 echo "========================================"
 echo "    JAVIN FileShare Launcher"

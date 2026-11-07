@@ -19,12 +19,11 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
  * cancelled when the sender re-enters the send page.
  */
 describe('sender refresh grace', () => {
-  let app;
   let io;
 
   beforeEach(() => {
     resetStoreForTests();
-    ({ app, io } = createTestApp());
+    ({ io } = createTestApp());
     registerSocketHandlers(io);
   });
 
@@ -37,7 +36,7 @@ describe('sender refresh grace', () => {
     return socket;
   }
 
-  function setupSession({ sessionId } = {}) {
+  function setupSession() {
     return createSession(io, true).then(({ sessionId: sid }) => {
       const session = store.sessions.get(sid);
       const sender = {

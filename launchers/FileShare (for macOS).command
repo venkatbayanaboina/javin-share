@@ -5,7 +5,7 @@
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Change to the script directory
-cd "$SCRIPT_DIR"
+cd "$SCRIPT_DIR" || exit 1
 
 # Make the unified launcher executable
 chmod +x "Javin FileShare (for macOS & Linux).sh"
@@ -16,4 +16,4 @@ chmod +x "Javin FileShare (for macOS & Linux).sh"
 # Keep the window open
 echo
 echo "Press any key to close this window..."
-read -n 1 -s
+read -r -n 1 -s
